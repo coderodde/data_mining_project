@@ -101,10 +101,10 @@ public abstract class
         }
         
         if (itemset1.get(length - 1).equals(itemset2.get(length - 1))) {
-            throw new IllegalStateException("Please, debug me.");
+            return null;
         }
         
-        final Set<I> itemset = new HashSet<>(itemset1.size());
+        final Set<I> itemset = new HashSet<>(itemset1.size() + 1);
         
         for (int i = 0; i < length - 1; ++i) {
             itemset.add(itemset1.get(i));

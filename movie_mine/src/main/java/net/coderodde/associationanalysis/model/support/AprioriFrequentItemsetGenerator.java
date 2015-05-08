@@ -38,6 +38,7 @@ extends AbstractFrequentItemsetGenerator<I> {
         for (final Set<I> itemset : transactionList) {
             for (final I item : itemset) {
                 final Set<I> oneItemset = new HashSet<>(1);
+                oneItemset.add(item);
                 supportCountFunction.increaseSupportCount(oneItemset);
                 
                 final double support = 
@@ -57,6 +58,8 @@ extends AbstractFrequentItemsetGenerator<I> {
             
             final List<Set<I>> candidateList = 
                     generateCandidates(map.get(k - 1));
+            
+            System.out.println("k = " + k);
             
             for (final Set<I> transaction : transactionList) {
                 final List<Set<I>> candidateList2 = subset(candidateList,
