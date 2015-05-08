@@ -1,7 +1,7 @@
 package net.coderodde.moviemine.model;
 
-import static net.coderodde.moviemine.util.Validation.checkIntegerNotNegative;
-import static net.coderodde.moviemine.util.Validation.checkNotNull;
+import static net.coderodde.util.Validation.checkIntegerNotNegative;
+import static net.coderodde.util.Validation.checkNotNull;
 
 /**
  * This class models a user.
@@ -112,6 +112,34 @@ public class User {
      */
     public String getZipCode() {
         return zipCode;
+    }
+    
+    /**
+     * Returns the hash code of this user, which depends only on the ID of this
+     * user.
+     * 
+     * @return the hash code.
+     */
+    @Override
+    public int hashCode() {
+        return getId().hashCode();
+    }
+
+    /**
+     * Checks whether this user and <code>obj</code> encode the same movie. Two
+     * movies are considered same if and only if their ID's are equal.
+     * 
+     * @param  obj the user object candidate.
+     * @return <code>true</code> if and only if the two objects encode the same
+     *         user.
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (!(obj instanceof User)) {
+            return false;
+        }
+        
+        return ((User) obj).getId().equals(getId());
     }
     
     /**

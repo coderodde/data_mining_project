@@ -1,4 +1,4 @@
-package net.coderodde.moviemine.util;
+package net.coderodde.util;
 
 /**
  * This class contains methods for validation.

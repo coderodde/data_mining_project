@@ -2,9 +2,10 @@ package net.coderodde.moviemine.model;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
-import static net.coderodde.moviemine.util.Validation.checkNotNull;
+import static net.coderodde.util.Validation.checkNotNull;
 
 /**
  * This class models a movie.
@@ -70,6 +71,32 @@ public class Movie {
      */
     public Set<String> getGenres() {
         return Collections.<String>unmodifiableSet(genreSet);
+    }
+    
+    /**
+     * Returns the hash code for this movie, which depends only on its ID.
+     * 
+     * @return the hash code.
+     */
+    @Override
+    public int hashCode() {
+        return getId().hashCode();
+    }
+    
+    /**
+     * Checks whether this movie and <code>obj</code> encode the same movie.
+     * The two movies are considered same if they have identical ID.
+     * 
+     * @param  obj the movie candidate object.
+     * @return <code>true</code> if and only if the two movies are same.
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (!(obj instanceof Movie)) {
+            return false;
+        }
+        
+        return ((Movie) obj).getId().equals(getId());
     }
     
     /**

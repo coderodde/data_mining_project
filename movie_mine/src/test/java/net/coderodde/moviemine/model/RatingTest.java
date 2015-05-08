@@ -37,10 +37,18 @@ public class RatingTest {
     @Test
     public void testGetScore() {
         assertEquals(4.5f, rating.getScore(), 0.0001f);
+        assertFalse(rating.getScore() == 4.3f);
+        assertFalse(rating.getScore() == 4.4f);
+        assertFalse(rating.getScore() == 4.6f);
+        assertFalse(rating.getScore() == 4.7f);
     }
 
     @Test
     public void testGetTimestamp() {
         assertEquals(1000L, rating.getTimestamp());
+        assertFalse(rating.getTimestamp() == 998L);
+        assertFalse(rating.getTimestamp() == 999L);
+        assertFalse(rating.getTimestamp() == 1001L);
+        assertFalse(rating.getTimestamp() == 1002L);
     }
 }

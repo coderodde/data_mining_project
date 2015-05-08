@@ -1,6 +1,6 @@
 package net.coderodde.moviemine.model;
 
-import static net.coderodde.moviemine.util.Validation.checkNotNull;
+import static net.coderodde.util.Validation.checkNotNull;
 
 /**
  * This class models movie ratings given by users.
