@@ -1,6 +1,7 @@
 package net.coderodde.moviemine.model;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -17,8 +18,10 @@ import net.coderodde.associationanalysis.model.AbstractDatabase;
  */
 public class DefaultDatabase extends AbstractDatabase<User, Movie>{
 
-//    private final Map<User, List<Rating>> mapUserToRatingList;
-//    private final Map<Movie, List<Rating>> mapMovieToRatingList;
+    private final List<User> userList;
+    private final List<Movie> movieList;
+    private final List<Rating> ratingList;
+
     private final Map<String, User> mapUserIdToUser;
     private final Map<String, Movie> mapMovieIdToMovie;
     private final Map<User, Set<Movie>> mainMap;
@@ -33,8 +36,9 @@ public class DefaultDatabase extends AbstractDatabase<User, Movie>{
     public DefaultDatabase(final List<User> userList,
                            final List<Movie> movieList,
                            final List<Rating> ratingList) {
-//        this.mapUserToRatingList = new HashMap<>(userList.size());
-//        this.mapMovieToRatingList = new HashMap<>(movieList.size());
+        this.userList = userList;
+        this.movieList = movieList;
+        this.ratingList = ratingList;
         
         this.mapUserIdToUser = new HashMap<>(userList.size());
         this.mapMovieIdToMovie = new HashMap<>(movieList.size());
@@ -52,17 +56,6 @@ public class DefaultDatabase extends AbstractDatabase<User, Movie>{
         for (final Rating rating : ratingList) {
             final User user = this.mapUserIdToUser.get(rating.getUserId());
             final Movie movie = this.mapMovieIdToMovie.get(rating.getMovieId());
-            
-//            if (!this.mapUserToRatingList.containsKey(user)) {
-//                this.mapUserToRatingList.put(user, new ArrayList<Rating>());
-//            }
-//            
-//            if (!this.mapMovieToRatingList.containsKey(movie)) {
-//                this.mapMovieToRatingList.put(movie, new ArrayList<Rating>());
-//            }
-//            
-//            this.mapUserToRatingList.get(user).add(rating);
-//            this.mapMovieToRatingList.get(movie).add(rating);
             
             if (!this.mainMap.containsKey(user)) {
                 this.mainMap.put(user, new LinkedHashSet<Movie>());
@@ -126,5 +119,17 @@ public class DefaultDatabase extends AbstractDatabase<User, Movie>{
         }
         
         return sb.toString();
+    }
+    
+    public List<User> getUserView() {
+        return Collections.unmodifiableList(userList);
+    }
+    
+    public List<Movie> getMovieView() {
+        return Collections.unmodifiableList(movieList);
+    }
+    
+    public List<Rating> getRatingView() {
+        return Collections.unmodifiableList(ratingList);
     }
 }
