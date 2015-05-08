@@ -96,6 +96,24 @@ public class Rating {
     }
     
     /**
+     * Returns the string representation of this rating.
+     * 
+     * @return the string representation.
+     */
+    @Override
+    public String toString() {
+        return new StringBuilder("[RATING| userId: ")
+               .append(getUserId())
+               .append(", movieId: ")
+               .append(getMovieId())
+               .append(", score: ")
+               .append(getScore())
+               .append(", timestamp: ")
+               .append(getTimestamp())
+               .append("]").toString();
+    }
+    
+    /**
      * This class implements a user ID selector.
      */
     public static class UserIdSelector {

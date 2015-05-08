@@ -105,4 +105,26 @@ public class DefaultDatabase extends AbstractDatabase<User, Movie>{
     public int size() {
         return mainMap.size();
     }
+    
+    /**
+     * Returns a string representation of this database.
+     * 
+     * @return a string representation.
+     */
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        
+        for (final User user : mainMap.keySet()) {
+            sb.append(user.toString()).append('\n');
+            
+            for (final Movie item : mainMap.get(user)) {
+                sb.append(item.toString()).append('\n');
+            }
+            
+            sb.append('\n');
+        }
+        
+        return sb.toString();
+    }
 }

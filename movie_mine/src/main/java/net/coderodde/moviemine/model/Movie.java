@@ -101,6 +101,33 @@ public class Movie {
     }
     
     /**
+     * Returns the string representation of this movie.
+     * 
+     * @return the string representation of this movie.
+     */
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("[MOVIE| id: ")
+                                    .append(getId())
+                                    .append(", title: ")
+                                    .append(getTitle())
+                                    .append(", genres: <");
+        
+        int i = 0;
+        
+        for (final String genre : genreSet) {
+            sb.append(genre);
+            
+            if (i < genreSet.size() - 1) {
+                sb.append(", ");
+            }
+            
+            ++i;
+        }
+        
+        return sb.append(">]").toString();
+    }
+    
+    /**
      * Initiates a fluent API for creating a movie.
      * 
      * @return the movie ID selector.

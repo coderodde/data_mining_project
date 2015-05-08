@@ -142,6 +142,22 @@ public class User {
         return ((User) obj).getId().equals(getId());
     }
     
+    @Override
+    public String toString() {
+        return new StringBuilder("[USER| id: ")
+               .append(getId())
+               .append(", gender: ")
+               .append(getGender())
+               .append(", age: ")
+               .append(getAge())
+               .append(", occupation: ")
+               .append(occupation)
+               .append(", zipCode: ")
+               .append(getZipCode())
+               .append("]")
+               .toString();
+    }
+    
     /**
      * Initiates the fluent API for constructing a user.
      * 
