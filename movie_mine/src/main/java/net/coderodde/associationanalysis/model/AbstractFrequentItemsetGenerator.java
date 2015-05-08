@@ -122,7 +122,7 @@ public abstract class
      * @param candidateList        the list of candidate itemsets.
      * @param supportCountFunction the support count function.
      * @param minimumSupport       the minimum support.
-     * @param transactionList      the list of target transactions.
+     * @param transactions         the amount of target transactions.
      * @return the list of frequent itemsets.
      */
     protected Set<Set<I>> 
@@ -130,14 +130,14 @@ public abstract class
                 final Set<Set<I>> candidateList,
                 final AbstractSupportCountFunction<I> supportCountFunction,
                 final double minimumSupport,
-                final List<Set<I>> transactionList) {
+                final int transactions) {
         final Set<Set<I>> ret = new HashSet<>(candidateList.size());
         
         for (final Set<I> itemset : candidateList) {
             final int supportCount = 
                     supportCountFunction.getSupportCount(itemset);
             
-            final double support = 1.0 * supportCount / transactionList.size();
+            final double support = 1.0 * supportCount / transactions;
             
             if (support >= minimumSupport) {
                 ret.add(itemset);

@@ -21,10 +21,25 @@ import net.coderodde.associationanalysis.model.FrequentItemsetData;
 public class AprioriFrequentItemsetGenerator<I> 
 extends AbstractFrequentItemsetGenerator<I> {
 
+    /**
+     * Constructs this itemset generator. The underlying algorithm is 
+     * "Apriori algorithm".
+     * 
+     * @param comparator the comparator for items.
+     */
     public AprioriFrequentItemsetGenerator(final Comparator<I> comparator) {
         super(comparator);
     }
     
+    /**
+     * Mines frequent patterns from the transaction list. A frequent pattern is
+     * any itemset having support at least <code>minimumSupport</code>.
+     * 
+     * @param transactionList the list of target transactions.
+     * @param minimumSupport  the minimum support.
+     * @return a data object describing the frequent patterns and their support
+     *         counts.
+     */
     @Override
     public FrequentItemsetData<I> 
         findFrequentItemsets(final List<Set<I>> transactionList,
@@ -60,8 +75,6 @@ extends AbstractFrequentItemsetGenerator<I> {
             final Set<Set<I>> candidateList = 
                     generateCandidates(map.get(k - 1));
             
-            System.out.println("k = " + k);
-            
             for (final Set<I> transaction : transactionList) {
                 final Set<Set<I>> candidateList2 = subset(candidateList,
                                                           transaction);
@@ -74,7 +87,7 @@ extends AbstractFrequentItemsetGenerator<I> {
             map.put(k, getNextItemsets(candidateList,
                                        supportCountFunction,
                                        minimumSupport,
-                                       transactionList));
+                                       transactionList.size()));
             
         } while (!map.get(k).isEmpty());
         
