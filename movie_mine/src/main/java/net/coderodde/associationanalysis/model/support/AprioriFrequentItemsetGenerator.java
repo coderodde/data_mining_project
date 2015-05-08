@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,9 +32,9 @@ extends AbstractFrequentItemsetGenerator<I> {
         final AprioriSupportCountFunction<I> supportCountFunction = 
                 new AprioriSupportCountFunction<>();
         
-        final Map<Integer, List<Set<I>>> map = new HashMap<>();
+        final Map<Integer, Set<Set<I>>> map = new HashMap<>();
         
-        map.put(1, new ArrayList<Set<I>>());
+        map.put(1, new LinkedHashSet<Set<I>>());
         
         for (final Set<I> itemset : transactionList) {
             for (final I item : itemset) {
@@ -56,14 +57,14 @@ extends AbstractFrequentItemsetGenerator<I> {
         do {
             ++k;
             
-            final List<Set<I>> candidateList = 
+            final Set<Set<I>> candidateList = 
                     generateCandidates(map.get(k - 1));
             
             System.out.println("k = " + k);
             
             for (final Set<I> transaction : transactionList) {
-                final List<Set<I>> candidateList2 = subset(candidateList,
-                                                           transaction);
+                final Set<Set<I>> candidateList2 = subset(candidateList,
+                                                          transaction);
                 
                 for (final Set<I> itemset : candidateList2) {
                     supportCountFunction.increaseSupportCount(itemset);

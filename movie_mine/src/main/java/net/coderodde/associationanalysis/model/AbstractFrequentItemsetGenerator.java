@@ -54,7 +54,7 @@ public abstract class
      * @param  itemsetList the list of itemsets.
      * @return the list of next itemsets.
      */
-    protected List<Set<I>> generateCandidates(final List<Set<I>> itemsetList) {
+    protected Set<Set<I>> generateCandidates(final Set<Set<I>> itemsetList) {
         final List<List<I>> list = new ArrayList<>(itemsetList.size());
         
         for (final Set<I> itemset : itemsetList) {
@@ -64,7 +64,7 @@ public abstract class
         }
         
         final int N = list.size();
-        final List<Set<I>> ret = new ArrayList<>(N);
+        final Set<Set<I>> ret = new HashSet<>(N);
         
         for (int i = 0; i < N; ++i) {
             for (int j = i + 1; j < N; ++j) {
@@ -125,13 +125,13 @@ public abstract class
      * @param transactionList      the list of target transactions.
      * @return the list of frequent itemsets.
      */
-    protected List<Set<I>> 
+    protected Set<Set<I>> 
         getNextItemsets(
-                final List<Set<I>> candidateList,
+                final Set<Set<I>> candidateList,
                 final AbstractSupportCountFunction<I> supportCountFunction,
                 final double minimumSupport,
                 final List<Set<I>> transactionList) {
-        final List<Set<I>> ret = new ArrayList<>(candidateList.size());
+        final Set<Set<I>> ret = new HashSet<>(candidateList.size());
         
         for (final Set<I> itemset : candidateList) {
             final int supportCount = 
@@ -155,9 +155,9 @@ public abstract class
      * @param  transaction   the transaction.
      * @return a list of itemsets.
      */
-    protected List<Set<I>> subset(final List<Set<I>> candidateList,
-                                  final Set<I> transaction) {
-        final List<Set<I>> ret = new ArrayList<>(candidateList.size());
+    protected Set<Set<I>> subset(final Set<Set<I>> candidateList,
+                                 final Set<I> transaction) {
+        final Set<Set<I>> ret = new HashSet<>(candidateList.size());
         
         for (final Set<I> candidate : candidateList) {
             if (transaction.containsAll(candidate)) {
@@ -176,10 +176,10 @@ public abstract class
      * @return the list of frequent itemsets in no particular order.
      */
     protected List<Set<I>> 
-        extractFrequentItemsets(final Map<Integer, List<Set<I>>> map) {
+        extractFrequentItemsets(final Map<Integer, Set<Set<I>>> map) {
         final List<Set<I>> ret = new ArrayList<>();
         
-        for (final List<Set<I>> itemsetList : map.values()) {
+        for (final Set<Set<I>> itemsetList : map.values()) {
             ret.addAll(itemsetList);
         }
         

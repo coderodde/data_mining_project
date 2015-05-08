@@ -1,9 +1,14 @@
 package net.coderodde.associationanalysis.model.support;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import net.coderodde.associationanalysis.model.AbstractDatabase;
 import net.coderodde.associationanalysis.model.AbstractFrequentItemsetGenerator;
+import net.coderodde.associationanalysis.model.AbstractSupportCountFunction;
 import net.coderodde.associationanalysis.model.FrequentItemsetData;
 import net.coderodde.moviemine.model.DefaultDatabase;
 import net.coderodde.moviemine.model.Movie;
@@ -19,6 +24,7 @@ public class AprioriFrequentItemsetGeneratorTest {
         final List<User> userList = new ArrayList<>();
         final List<Movie> movieList = new ArrayList<>();
         final List<Rating> ratingList = new ArrayList<>();
+        final Map<String, Movie> map = new HashMap<>();
         
         userList.add(User.createUser()
                         .withId("1")
@@ -61,11 +67,15 @@ public class AprioriFrequentItemsetGeneratorTest {
                         .withGenre("food")
                         .endGenres());
         
+        map.put("Bread", movieList.get(0));
+        
         movieList.add(Movie.createMovie()
                         .withMovieId("11")
                         .withTitle("Milk")
                         .withGenre("food")
                         .endGenres());
+        
+        map.put("Milk", movieList.get(1));
         
         movieList.add(Movie.createMovie()
                         .withMovieId("12")
@@ -73,11 +83,15 @@ public class AprioriFrequentItemsetGeneratorTest {
                         .withGenre("food")
                         .endGenres());
         
+        map.put("Diapers", movieList.get(2));
+        
         movieList.add(Movie.createMovie()
                         .withMovieId("13")
                         .withTitle("Beer")
                         .withGenre("food")
                         .endGenres());
+        
+        map.put("Beer", movieList.get(3));
         
         movieList.add(Movie.createMovie()
                         .withMovieId("14")
@@ -85,11 +99,15 @@ public class AprioriFrequentItemsetGeneratorTest {
                         .withGenre("food")
                         .endGenres());
         
+        map.put("Eggs", movieList.get(4));
+        
         movieList.add(Movie.createMovie()
                         .withMovieId("15")
                         .withTitle("Cola")
                         .withGenre("food")
                         .endGenres());
+        
+        map.put("Cola", movieList.get(5));
         
         // 1
         ratingList.add(Rating.createRating()
@@ -216,8 +234,45 @@ public class AprioriFrequentItemsetGeneratorTest {
                     (Movie.defaultMovieComparator);
         
         final FrequentItemsetData<Movie> data =
-                generator.findFrequentItemsets(db.select(), 0.2);
+                generator.findFrequentItemsets(db.select(), 0.4);
         
         assertTrue(data.getFrequentItemsets().size() > 0);
+        
+        final List<Set<Movie>> frequentItemsetList = data.getFrequentItemsets();
+        final AbstractSupportCountFunction<Movie> sf = 
+                data.getSupportCountFunction();
+        
+        final Set<Movie> work = new HashSet<>();
+        
+        work.add(map.get("Bread"));
+        work.add(map.get("Milk"));
+        
+        assertTrue(frequentItemsetList.contains(work));
+        assertEquals(3, sf.getSupportCount(work));
+        
+        work.clear();
+        work.add(map.get("Bread"));
+        work.add(map.get("Diapers"));
+        
+        assertTrue(frequentItemsetList.contains(work));
+        assertEquals(3, sf.getSupportCount(work));
+        
+        work.clear();
+        work.add(map.get("Milk"));
+        work.add(map.get("Diapers"));
+        
+        assertTrue(frequentItemsetList.contains(work));
+        assertEquals(3, sf.getSupportCount(work));
+        
+        work.clear();
+        work.add(map.get("Eggs"));
+        
+        assertFalse(frequentItemsetList.contains(work));
+        assertEquals(1, sf.getSupportCount(work));
+        
+        work.add(map.get("Cola"));
+        
+        assertFalse(frequentItemsetList.contains(work));
+        assertEquals(0, sf.getSupportCount(work));
     }
 }
