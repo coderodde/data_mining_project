@@ -2,6 +2,7 @@ package net.coderodde.moviemine.model;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
@@ -221,4 +222,21 @@ public class Movie {
                              genreSet.toArray(new String[genreSet.size()]));
         }
     }
+    
+    /**
+     * Implements a comparator. Uses movie ID's as the sort key.
+     */
+    public static class DefaultMovieComparator implements Comparator<Movie> {
+
+        @Override
+        public int compare(final Movie o1, final Movie o2) {
+            return o1.getId().compareTo(o2.getId());
+        }
+    }
+    
+    /**
+     * Caches the movie comparator.
+     */
+    public static final DefaultMovieComparator defaultMovieComparator = 
+            new DefaultMovieComparator();
 }

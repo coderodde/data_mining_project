@@ -2,6 +2,7 @@ package net.coderodde.associationanalysis.model;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -17,22 +18,38 @@ import java.util.Set;
  * @param <I> the actual item type.
  */
 public abstract class 
-        AbstractFrequentItemsetGenerator<I extends Comparable<? super I>> {
+        AbstractFrequentItemsetGenerator<I> {
+    
+    /**
+     * The item comparator. Required in the routine generating next itemsets.
+     */
+    protected final Comparator<I> itemComparator;
+    
+    /**
+     * Construct this frequent itemset generator with given comparator.
+     * 
+     * @param itemComparator the item comparator.
+     */
+    public AbstractFrequentItemsetGenerator
+        (final Comparator<I> itemComparator) {
+        this.itemComparator = itemComparator;
+    }
     
     /**
      * The algorithm for generation of frequent itemsets.
      * 
-     * @param  database the actual database.
-     * @param  minimumSupport the minimum support for mining task.
+     * @param  transactionList the list of transactions to mine.
+     * @param  minimumSupport  the minimum support for mining task.
      * @return the object describing the frequent itemsets and support count
      *         function.
      */
     public abstract FrequentItemsetData<I>
-        findFrequentItemsets(final AbstractDatabase<?, I> database,
+        findFrequentItemsets(final List<Set<I>> transactionList,
                              final double minimumSupport);
         
     /**
-     * Generates k+1 -itemset candidate from k-itemsets.
+     * Generates k+1 -itemset candidate from k-itemsets. This is so called
+     * <tt>F_{k - 1} x F_{k - 1}</tt> routine.
      * 
      * @param  itemsetList the list of itemsets.
      * @return the list of next itemsets.
@@ -42,7 +59,7 @@ public abstract class
         
         for (final Set<I> itemset : itemsetList) {
             final List<I> l = new ArrayList<>(itemset);
-            Collections.<I>sort(l);
+            Collections.<I>sort(l, itemComparator);
             list.add(l);
         }
         
@@ -65,6 +82,8 @@ public abstract class
     
     /**
      * Tries to merge two <tt>k</tt>-itemsets into one <tt>k + 1</tt>-itemset.
+     * It does this only if <tt>N - 1</tt> first elements in both itemsets are
+     * same.
      * 
      * @param  itemset1 the first itemset.
      * @param  itemset2 the second itemset.
@@ -103,7 +122,7 @@ public abstract class
      * @param candidateList        the list of candidate itemsets.
      * @param supportCountFunction the support count function.
      * @param minimumSupport       the minimum support.
-     * @param database             the transaction database.
+     * @param transactionList      the list of target transactions.
      * @return the list of frequent itemsets.
      */
     protected List<Set<I>> 
@@ -111,14 +130,14 @@ public abstract class
                 final List<Set<I>> candidateList,
                 final AbstractSupportCountFunction<I> supportCountFunction,
                 final double minimumSupport,
-                final AbstractDatabase<?, I> database) {
+                final List<Set<I>> transactionList) {
         final List<Set<I>> ret = new ArrayList<>(candidateList.size());
         
         for (final Set<I> itemset : candidateList) {
             final int supportCount = 
                     supportCountFunction.getSupportCount(itemset);
             
-            final double support = 1.0 * supportCount / database.size();
+            final double support = 1.0 * supportCount / transactionList.size();
             
             if (support >= minimumSupport) {
                 ret.add(itemset);
@@ -128,6 +147,14 @@ public abstract class
         return ret;
     }
         
+    /**
+     * Returns the list of those itemsets, that are completely contained in 
+     * <code>transaction</code>.
+     * 
+     * @param  candidateList the list of candidate itemsets.
+     * @param  transaction   the transaction.
+     * @return a list of itemsets.
+     */
     protected List<Set<I>> subset(final List<Set<I>> candidateList,
                                   final Set<I> transaction) {
         final List<Set<I>> ret = new ArrayList<>(candidateList.size());
@@ -141,6 +168,13 @@ public abstract class
         return ret;
     }
     
+    /**
+     * Extracts all the frequent itemsets.
+     * 
+     * @param  map the map mapping the size of itemset to a list of all itemsets
+     *             with same size.
+     * @return the list of frequent itemsets in no particular order.
+     */
     protected List<Set<I>> 
         extractFrequentItemsets(final Map<Integer, List<Set<I>>> map) {
         final List<Set<I>> ret = new ArrayList<>();
