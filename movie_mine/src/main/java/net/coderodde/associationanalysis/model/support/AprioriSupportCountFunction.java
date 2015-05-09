@@ -23,8 +23,11 @@ extends AbstractSupportCountFunction<I>{
     
     /**
      * Constructs this support count function.
+     * 
+     * @param transactionAmount the amount of transactions covered.
      */
-    public AprioriSupportCountFunction() {
+    public AprioriSupportCountFunction(final int transactionAmount) {
+        super(transactionAmount);
         this.map = new HashMap<>();
     }
     

@@ -1,6 +1,7 @@
 package net.coderodde.moviemine.model;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -12,23 +13,52 @@ import java.util.Set;
  */
 public class AssociationRule<I> {
     
+    /**
+     * The set of items in the antecedent of this rule.
+     */
     private final Set<I> antecedent;
+    
+    /**
+     * The set of items in the consequent of this rule.
+     */
     private final Set<I> consequent;
     
+    /**
+     * Creates a new association rule.
+     * 
+     * @param antecedent the antecedent.
+     * @param consequent the consequent.
+     */
     public AssociationRule(final Set<I> antecedent,
                            final Set<I> consequent) {
-        this.antecedent = antecedent;
-        this.consequent = consequent;
+        this.antecedent = new HashSet<>(antecedent);
+        this.consequent = new HashSet<>(consequent);
     }
     
+    /**
+     * Returns an unmodifiable view of the antecedent of this association rule.
+     * 
+     * @return the antecedent.
+     */
     public Set<I> getAntecedent() {
         return Collections.unmodifiableSet(antecedent);
     }
     
+    /**
+     * Returns an unmodifiable view of the consequent of this association rule.
+     * 
+     * @return the consequent.
+     */
     public Set<I> getConsequent() {
         return Collections.unmodifiableSet(consequent);
     }
     
+    /**
+     * Returns the string representation of this association rule.
+     * 
+     * @return the string representation.
+     */
+    @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("{");
         

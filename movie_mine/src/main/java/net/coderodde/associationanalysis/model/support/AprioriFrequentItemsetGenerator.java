@@ -45,7 +45,7 @@ extends AbstractFrequentItemsetGenerator<I> {
         findFrequentItemsets(final List<Set<I>> transactionList,
                              final double minimumSupport) {
         final AprioriSupportCountFunction<I> supportCountFunction = 
-                new AprioriSupportCountFunction<>();
+                new AprioriSupportCountFunction<>(transactionList.size());
         
         final Map<Integer, Set<Set<I>>> map = new HashMap<>();
         
@@ -92,6 +92,7 @@ extends AbstractFrequentItemsetGenerator<I> {
         } while (!map.get(k).isEmpty());
         
         return new FrequentItemsetData<>(extractFrequentItemsets(map),
-                                         supportCountFunction);
+                                         supportCountFunction,
+                                         transactionList.size());
     }
 }

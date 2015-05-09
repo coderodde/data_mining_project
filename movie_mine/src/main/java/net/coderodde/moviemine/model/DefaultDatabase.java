@@ -11,7 +11,7 @@ import java.util.function.Predicate;
 import net.coderodde.associationanalysis.model.AbstractDatabase;
 
 /**
- * This class implements the <i>movielens</i> database.
+ * This class implements the <i>MovieLens</i> database.
  * 
  * @author Rodion Efremov
  * @version 1.6

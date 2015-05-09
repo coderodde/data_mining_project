@@ -1,7 +1,9 @@
 package net.coderodde.associationanalysis.model;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import net.coderodde.moviemine.util.Utilities;
 
 /**
  * This class holds the data needed to generate association rules.
@@ -40,6 +42,9 @@ public class FrequentItemsetData<I> {
         this.frequentItemsets = frequentItemsets;
         this.supportCountFunction = supportCountFunction;
         this.transactionAmount = transactionAmount;
+        Collections.sort(frequentItemsets,
+                         new Utilities.MovieItemsetComparatorBySupport
+                         (this.supportCountFunction));
     }
     
     /**

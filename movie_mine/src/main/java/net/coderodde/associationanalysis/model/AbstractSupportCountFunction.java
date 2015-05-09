@@ -14,6 +14,20 @@ import net.coderodde.moviemine.model.AssociationRule;
 public abstract class AbstractSupportCountFunction<I> {
     
     /**
+     * The amount of transactions this function covers.
+     */
+    protected final int transactionAmount;
+    
+    /**
+     * Constructs a new support count function.
+     * 
+     * @param transactionAmount the amount of transaction covered.
+     */
+    public AbstractSupportCountFunction(final int transactionAmount) {
+        this.transactionAmount = transactionAmount;
+    }
+    
+    /**
      * Returns the current support count for <code>itemset</code>.
      * 
      * @param  itemset the itemset whose support count to retrieve.
@@ -40,13 +54,17 @@ public abstract class AbstractSupportCountFunction<I> {
         putSupportCount(itemset, getSupportCount(itemset) + 1);
     }
     
+    public double getSupport(final Set<I> itemset) {
+        return 1.0 * getSupportCount(itemset) / transactionAmount;
+    }
+    
     /**
      * Returns the confidence of the rule <code>rule</code>.
      * 
      * @param  rule the target rule.
      * @return confidence value.
      */
-    public double confidence(final AssociationRule<I> rule) {
+    public double onfidence(final AssociationRule<I> rule) {
         final Set<I> set = new HashSet<>(rule.getAntecedent().size() + 
                                          rule.getConsequent().size());
         set.addAll(rule.getAntecedent());
