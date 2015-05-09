@@ -3,12 +3,14 @@ package net.coderodde.moviemine;
 import java.io.File;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Logger;
+import net.coderodde.associationanalysis.model.AbstractAssociationRuleGenerator;
 import net.coderodde.associationanalysis.model.AbstractFrequentItemsetGenerator;
 import net.coderodde.associationanalysis.model.FrequentItemsetData;
 import net.coderodde.associationanalysis.model.support.AprioriFrequentItemsetGenerator;
+import net.coderodde.associationanalysis.model.support.DefaultAssociationRuleGenerator;
 import net.coderodde.moviemine.loader.AbstractDataLoader;
 import net.coderodde.moviemine.loader.support.MovieLens1MDataLoader;
+import net.coderodde.moviemine.model.AssociationRule;
 import net.coderodde.moviemine.model.DefaultDatabase;
 import net.coderodde.moviemine.model.Movie;
 import net.coderodde.moviemine.util.Utilities;
@@ -22,16 +24,16 @@ import net.coderodde.moviemine.util.Utilities;
 public class App {
     
     /**
-     * The entry point into the program.
+     * The entry point into the program. If <code>args</code> is not empty,
+     * <code>args[0]</code> is assumed to be the absolute path to the data 
+     * directory.
      * 
-     * @param args 
+     * @param args the command line arguments. 
      */
     public static void main(final String... args) {
         File dataDirectoryFile = getFile(args);
         
         final DefaultDatabase db = load(dataDirectoryFile);
-        
-        Logger.getLogger("Loading").info("Loading stats");
         
         System.out.println("Users:   " + db.getUserView().size());
         System.out.println("Movies:  " + db.getMovieView().size());
@@ -41,10 +43,13 @@ public class App {
                 new AprioriFrequentItemsetGenerator<>
                     (Movie.defaultMovieComparator);
         
-        final double minimumSupport = 0.2;
+        final double minimumSupport = 0.25;
+        final double minimumConfidence = 0.7;
         
         final FrequentItemsetData<Movie> data = 
                 minePatternsWithApriori(db.select(), minimumSupport);
+        
+        System.out.println("Frequent itemsets:");
         
         for (final Set<Movie> itemset : data.getFrequentItemsets()) {
             System.out.print(Utilities.toString(itemset) + ", support: ");
@@ -52,8 +57,29 @@ public class App {
                                    .getSupport(itemset));
             
         }
+        
+        System.out.println("Association rules:");
+        
+        final List<AssociationRule<Movie>> ruleList = 
+                mineAssociationRules(data, minimumConfidence);
+        
+        for (final AssociationRule<Movie> rule : ruleList) {
+            System.out.print(Utilities.toString(rule));
+            System.out.print(", support: ");
+            System.out.print(data.getSupportCountFunction().getSupport(rule));
+            System.out.print(", confidence: ");
+            System.out.println(data.getSupportCountFunction()
+                                   .getConfidence(rule));
+        }
     }
     
+    /**
+     * Returns the file possibly pointing into a directory containing the 
+     * actual data files.
+     * 
+     * @param  args the command line arguments.
+     * @return the file handle into data directory.
+     */
     private static File getFile(final String... args) {
         if (args.length == 0) {
             String path = System.getProperty("user.dir");
@@ -66,6 +92,13 @@ public class App {
         }
     }
     
+    /**
+     * Loads the database from a directory and prints the duration of that 
+     * operation.
+     * 
+     * @param  dataDirectoryFile the file handle pointing to the data directory.
+     * @return the database.
+     */
     private static DefaultDatabase load(final File dataDirectoryFile) {
         long ta = System.currentTimeMillis();
         final AbstractDataLoader dataLoader = 
@@ -79,6 +112,14 @@ public class App {
         return db;
     }
     
+    /**
+     * Mines the frequent patterns, prints the duration of that operation, and
+     * finally returns the frequent itemsets.
+     * 
+     * @param  transactionList the list of transactions to mine.
+     * @param  minimumSupport  the minimum support.
+     * @return the frequent itemset data.
+     */
     private static FrequentItemsetData<Movie> 
     minePatternsWithApriori(final List<Set<Movie>> transactionList,
                             final double minimumSupport) {
@@ -89,12 +130,28 @@ public class App {
                 .findFrequentItemsets(transactionList, minimumSupport);
         final long tb = System.currentTimeMillis();
         
-        Logger.getLogger("LOADING").info("Mining results");
-        
         System.out.println("Mined the frequent patterns with minimum support " +
                            minimumSupport + " in " + (tb - ta) + 
                            " milliseconds. Patterns found: " +
                            data.getFrequentItemsets().size());
         return data;
+    }
+    
+    private static List<AssociationRule<Movie>>
+    mineAssociationRules(final FrequentItemsetData<Movie> data,
+                         final double minimumConfidence) {
+        final AbstractAssociationRuleGenerator<Movie> arg = 
+                new DefaultAssociationRuleGenerator<>();
+        
+        final long ta = System.currentTimeMillis();
+        final List<AssociationRule<Movie>> ruleList = 
+                arg.mine(data, minimumConfidence);
+        final long tb = System.currentTimeMillis();
+    
+        System.out.println("Mined the association patterns in " + 
+                           (tb - ta) + " milliseconds. Rules found: " +
+                           ruleList.size());
+        
+        return ruleList;
     }
 }

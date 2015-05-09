@@ -1,6 +1,7 @@
 package net.coderodde.associationanalysis.model.support;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -8,12 +9,14 @@ import java.util.Set;
 import net.coderodde.associationanalysis.model.AbstractAssociationRuleGenerator;
 import net.coderodde.associationanalysis.model.FrequentItemsetData;
 import net.coderodde.moviemine.model.AssociationRule;
+import net.coderodde.moviemine.util.Utilities;
 
 /**
  * This class implements a default algorithm for association rule extraction.
  * 
  * @author Rodion Efremov
  * @version 1.6 
+ * @param <I> the item type.
  */
 public class DefaultAssociationRuleGenerator<I> 
 extends AbstractAssociationRuleGenerator<I> {
@@ -48,6 +51,11 @@ extends AbstractAssociationRuleGenerator<I> {
                                              minimumConfidence));
         }
         
+        // Sort the list such that higher-confidence rules pop up first.
+        Collections.sort(associationRuleList, 
+                         new Utilities.AssociationRuleComparatorByConfidence<>
+                         (data.getSupportCountFunction()));
+        
         return associationRuleList;
     }
     
@@ -61,7 +69,6 @@ extends AbstractAssociationRuleGenerator<I> {
         extractPreliminaryRules(final FrequentItemsetData<I> data) {
         final List<AssociationRule<I>> ret = new ArrayList<>();
         final Set<AssociationRule<I>> set = new HashSet<>();
-        final Set<I> workSet = new HashSet<>(1);
         
         final Set<I> antecedent = new HashSet<>();
         final Set<I> consequent = new HashSet<>(1);
@@ -138,6 +145,14 @@ extends AbstractAssociationRuleGenerator<I> {
                     iterator.remove();
                 }
             }
+            
+            final List<AssociationRule<I>> rulesToAdd =
+                    generateAssociationRules(itemset,
+                                             nextRuleList,
+                                             data,
+                                             minimumConfidence);
+            
+            set.addAll(rulesToAdd);
         }
         
         return new ArrayList<>(set);

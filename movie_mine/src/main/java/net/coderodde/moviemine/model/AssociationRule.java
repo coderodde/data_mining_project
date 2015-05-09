@@ -2,6 +2,7 @@ package net.coderodde.moviemine.model;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -11,7 +12,7 @@ import java.util.Set;
  * @version 1.6
  * @param <I> the item type.
  */
-public class AssociationRule<I> {
+    public class AssociationRule<I> {
     
     /**
      * The set of items in the antecedent of this rule.
@@ -89,5 +90,30 @@ public class AssociationRule<I> {
         }
         
         return sb.append("}").toString();
+    }
+    
+    /**
+     * Returns the hash code of this association rule which depends only on
+     * rule antecedent and consequent.
+     * @return 
+     */
+    @Override
+    public int hashCode() {
+        return antecedent.hashCode() ^ consequent.hashCode();
+    }
+
+    /**
+     * Returns true if this rule and <code>obj</code> encode the same 
+     * association rule.
+     * 
+     * @param  obj the object to test for equality.
+     * @return <code>true</code> if the two objects encode the same rule.
+     */
+    @Override
+    public boolean equals(Object obj) {
+        final AssociationRule<I> other = (AssociationRule<I>) obj;
+        
+        return antecedent.equals(other.antecedent)
+                && consequent.equals(other.consequent);
     }
 }

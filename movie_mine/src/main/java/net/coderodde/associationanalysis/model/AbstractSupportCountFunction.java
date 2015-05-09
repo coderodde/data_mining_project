@@ -54,8 +54,28 @@ public abstract class AbstractSupportCountFunction<I> {
         putSupportCount(itemset, getSupportCount(itemset) + 1);
     }
     
+    /**
+     * Returns the support of the input itemset.
+     * 
+     * @param  itemset the itemset.
+     * @return the support.
+     */
     public double getSupport(final Set<I> itemset) {
         return 1.0 * getSupportCount(itemset) / transactionAmount;
+    }
+    
+    /**
+     * Returns the support of the input association rule.
+     * 
+     * @param  rule the association rule.
+     * @return the support.
+     */
+    public double getSupport(final AssociationRule<I> rule) {
+        final Set<I> set = new HashSet<>(rule.getAntecedent().size() +
+                                         rule.getConsequent().size());
+        set.addAll(rule.getAntecedent());
+        set.addAll(rule.getConsequent());
+        return getSupport(set);
     }
     
     /**
@@ -64,7 +84,7 @@ public abstract class AbstractSupportCountFunction<I> {
      * @param  rule the target rule.
      * @return confidence value.
      */
-    public double onfidence(final AssociationRule<I> rule) {
+    public double getConfidence(final AssociationRule<I> rule) {
         final Set<I> set = new HashSet<>(rule.getAntecedent().size() + 
                                          rule.getConsequent().size());
         set.addAll(rule.getAntecedent());
