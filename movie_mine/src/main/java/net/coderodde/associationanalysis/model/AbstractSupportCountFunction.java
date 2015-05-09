@@ -1,6 +1,8 @@
 package net.coderodde.associationanalysis.model;
 
+import java.util.HashSet;
 import java.util.Set;
+import net.coderodde.moviemine.model.AssociationRule;
 
 /**
  * This abstract class defines the API for support count functions.
@@ -36,5 +38,24 @@ public abstract class AbstractSupportCountFunction<I> {
      */
     public void increaseSupportCount(final Set<I> itemset) {
         putSupportCount(itemset, getSupportCount(itemset) + 1);
+    }
+    
+    /**
+     * Returns the confidence of the rule <code>rule</code>.
+     * 
+     * @param  rule the target rule.
+     * @return confidence value.
+     */
+    public double confidence(final AssociationRule<I> rule) {
+        final Set<I> set = new HashSet<>(rule.getAntecedent().size() + 
+                                         rule.getConsequent().size());
+        set.addAll(rule.getAntecedent());
+        set.addAll(rule.getConsequent());
+        
+        final int itemsetSupportCount = getSupportCount(set);
+        final int antecedentSupportCount = 
+                getSupportCount(rule.getAntecedent());
+        
+        return 1.0 * itemsetSupportCount / antecedentSupportCount;
     }
 }

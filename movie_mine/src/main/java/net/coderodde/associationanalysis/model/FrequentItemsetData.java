@@ -21,16 +21,50 @@ public class FrequentItemsetData<I> {
     private final AbstractSupportCountFunction<I> supportCountFunction;
 
     /**
+     * The amount of distinct transactions considered in order to generate this
+     * data.
+     */
+    private final int transactionAmount;
+    
+    /**
      * Constructs this data holder.
      * 
      * @param frequentItemsets     the list of frequent itemsets.
      * @param supportCountFunction the support count function.
+     * @param transactionAmount    the amount of transactions.
      */
     public FrequentItemsetData(
             final List<Set<I>> frequentItemsets,
-            final AbstractSupportCountFunction<I> supportCountFunction) {
+            final AbstractSupportCountFunction<I> supportCountFunction,
+            final int transactionAmount) {
         this.frequentItemsets = frequentItemsets;
         this.supportCountFunction = supportCountFunction;
+        this.transactionAmount = transactionAmount;
+    }
+    
+    /**
+     * Returns the string representation of the input itemset.
+     * 
+     * @param <I>     the item type.
+     * @param itemset the target itemset.
+     * @return        a string.
+     */
+    public static <I> String toString(final Set<I> itemset) {
+        final StringBuilder sb = new StringBuilder("{");
+        
+        int index = 0;
+        
+        for (final I item : itemset) {
+            sb.append(item);
+            
+            if (index < itemset.size() - 1) {
+                sb.append(", ");
+            }
+            
+            ++index;
+        }
+        
+        return sb.append('}').toString();
     }
 
     /**
@@ -49,5 +83,14 @@ public class FrequentItemsetData<I> {
      */
     public AbstractSupportCountFunction<I> getSupportCountFunction() {
         return supportCountFunction;
+    }
+    
+    /**
+     * Returns the amount of transactions considered for this data.
+     * 
+     * @return the amount of transactions.
+     */
+    public int getTransactionAmount() {
+        return transactionAmount;
     }
 }
