@@ -34,8 +34,7 @@ extends AbstractAssociationRuleGenerator<I> {
         final List<AssociationRule<I>> inputRuleList =
                 extractPreliminaryRules(data);
         
-        final List<AssociationRule<I>> associationRuleList = 
-                new ArrayList<>();
+        final Set<AssociationRule<I>> associationRuleSet = new HashSet<>();
         
         for (final Set<I> itemset : data.getFrequentItemsets()) {
             if (itemset.size() < 2) {
@@ -44,19 +43,22 @@ extends AbstractAssociationRuleGenerator<I> {
                 continue;
             }
             
-            associationRuleList.addAll(
+            associationRuleSet.addAll(
                     generateAssociationRules(itemset,        
                                              inputRuleList,
                                              data,
                                              minimumConfidence));
         }
         
+        final List<AssociationRule<I>> ret = 
+                new ArrayList<>(associationRuleSet);
+        
         // Sort the list such that higher-confidence rules pop up first.
-        Collections.sort(associationRuleList, 
+        Collections.sort(ret, 
                          new Utilities.AssociationRuleComparatorByConfidence<>
                          (data.getSupportCountFunction()));
         
-        return associationRuleList;
+        return ret;
     }
     
     /**
@@ -68,7 +70,6 @@ extends AbstractAssociationRuleGenerator<I> {
     private List<AssociationRule<I>> 
         extractPreliminaryRules(final FrequentItemsetData<I> data) {
         final List<AssociationRule<I>> ret = new ArrayList<>();
-        final Set<AssociationRule<I>> set = new HashSet<>();
         
         final Set<I> antecedent = new HashSet<>();
         final Set<I> consequent = new HashSet<>(1);
@@ -91,14 +92,9 @@ extends AbstractAssociationRuleGenerator<I> {
                 final AssociationRule<I> rule = 
                         new AssociationRule<>(antecedent,
                                               consequent);
-                
-                set.add(rule);
                 ret.add(rule);
             }
         }
-        
-        System.out.println("extractPreliminaryRules - ret: " + ret.size() +
-                           ", set: " + set.size());
         
         return ret;
     }
@@ -108,6 +104,10 @@ extends AbstractAssociationRuleGenerator<I> {
                              final List<AssociationRule<I>> rules,
                              final FrequentItemsetData<I> data,
                              final double minimumConfidence) {
+        if (rules.isEmpty()) {
+            return new ArrayList<>(0);
+        }
+        
         final Set<AssociationRule<I>> set = new HashSet<>();
         final int itemsetSize = itemset.size();
         final int consequentSize = rules.get(0).getConsequent().size();
