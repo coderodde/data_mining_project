@@ -50,6 +50,8 @@ extends AbstractFrequentItemsetGenerator<I> {
         
         map.put(1, new LinkedHashSet<Set<I>>());
         
+        int line = 0;
+        
         for (final Set<I> itemset : transactionList) {
             for (final I item : itemset) {
                 final Set<I> oneItemset = new HashSet<>(1);
@@ -64,12 +66,20 @@ extends AbstractFrequentItemsetGenerator<I> {
                     map.get(1).add(oneItemset);
                 }
             } 
+            
+            ++line;
+            
+            if (line % 10000 == 0) {
+                System.out.println("Ln: " + line);
+            }
         }
         
         int k = 1;
         
         do {
             ++k;
+            
+            System.out.println("k = " + k);
             
             final Set<Set<I>> candidateList = 
                     generateCandidates(map.get(k - 1));

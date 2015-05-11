@@ -9,6 +9,7 @@ import net.coderodde.associationanalysis.model.FrequentItemsetData;
 import net.coderodde.associationanalysis.model.support.AprioriFrequentItemsetGenerator;
 import net.coderodde.associationanalysis.model.support.DefaultAssociationRuleGenerator;
 import net.coderodde.moviemine.loader.AbstractDataLoader;
+import net.coderodde.moviemine.loader.support.MovieLens10MDataLoader;
 import net.coderodde.moviemine.loader.support.MovieLens1MDataLoader;
 import net.coderodde.moviemine.model.AssociationRule;
 import net.coderodde.moviemine.model.DefaultDatabase;
@@ -31,9 +32,9 @@ public class App {
      * @param args the command line arguments. 
      */
     public static void main(final String... args) {
-        File dataDirectoryFile = getFile(args);
+        File dataDirectoryFile = getFile10M(args);
         
-        final DefaultDatabase db = load(dataDirectoryFile);
+        final DefaultDatabase db = load10M(dataDirectoryFile);
         
         System.out.println("Users:   " + db.getUserView().size());
         System.out.println("Movies:  " + db.getMovieView().size());
@@ -43,7 +44,7 @@ public class App {
                 new AprioriFrequentItemsetGenerator<>
                     (Movie.defaultMovieComparator);
         
-        final double minimumSupport = 0.25;
+        final double minimumSupport = 0.15;
         final double minimumConfidence = 0.7;
         
         final FrequentItemsetData<Movie> data = 
@@ -75,12 +76,12 @@ public class App {
     
     /**
      * Returns the file possibly pointing into a directory containing the 
-     * actual data files.
+     * actual data files of the 1M data package.
      * 
      * @param  args the command line arguments.
      * @return the file handle into data directory.
      */
-    private static File getFile(final String... args) {
+    private static File getFileM1(final String... args) {
         if (args.length == 0) {
             String path = System.getProperty("user.dir");
             final int index = path.lastIndexOf(File.separator + "movie_mine");
@@ -93,16 +94,55 @@ public class App {
     }
     
     /**
+     * Returns the file possibly pointing into a directory containing the 
+     * actual data files of the 10M data package.
+     * 
+     * @param  args the command line arguments.
+     * @return the file handle into data directory.
+     */
+    private static File getFile10M(final String... args) {
+        if (args.length == 0) {
+            String path = System.getProperty("user.dir");
+            final int index = path.lastIndexOf(File.separator + "movie_mine");
+            path = path.substring(0, index);
+            path += File.separator + "data" + File.separator + "ml-10M100K";
+            return new File(path);
+        } else {
+            return new File(args[0]);
+        }
+    }
+    
+    /**
      * Loads the database from a directory and prints the duration of that 
-     * operation.
+     * operation. Targets the 1M MovieLens data package.
      * 
      * @param  dataDirectoryFile the file handle pointing to the data directory.
      * @return the database.
      */
-    private static DefaultDatabase load(final File dataDirectoryFile) {
+    private static DefaultDatabase load1M(final File dataDirectoryFile) {
         long ta = System.currentTimeMillis();
         final AbstractDataLoader dataLoader = 
                 new MovieLens1MDataLoader(dataDirectoryFile);
+        
+        final DefaultDatabase db = dataLoader.load();
+        long tb = System.currentTimeMillis();
+        
+        System.out.println("Loading done in " + (tb - ta) + " ms.");
+        
+        return db;
+    }
+    
+    /**
+     * Loads the database from a directory and prints the duration of that 
+     * operation. Targets the 10M MovieLens data package.
+     * 
+     * @param  dataDirectoryFile the file handle pointing to the data directory.
+     * @return the database.
+     */
+    private static DefaultDatabase load10M(final File dataDirectoryFile) {
+        long ta = System.currentTimeMillis();
+        final AbstractDataLoader dataLoader = 
+                new MovieLens10MDataLoader(dataDirectoryFile);
         
         final DefaultDatabase db = dataLoader.load();
         long tb = System.currentTimeMillis();

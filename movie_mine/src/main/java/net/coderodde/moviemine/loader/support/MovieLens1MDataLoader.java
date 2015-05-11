@@ -132,12 +132,18 @@ public class MovieLens1MDataLoader extends AbstractDataLoader {
                                            User.Gender.FEMALE : 
                                            User.Gender.MALE;
                 
-                final User user = User.createUser()
-                                      .withId(parts[0])
-                                      .as(gender)
-                                      .withAge(Integer.parseInt(parts[2]))
-                                      .withOccupation(map.get(parts[3]))
-                                      .withZipCode(parts[4]);
+                final User user = new User(parts[0], 
+                                           gender,
+                                           Integer.parseInt(parts[2]),
+                                           map.get(parts[3]),
+                                           parts[4]);
+//                Too slow.
+//                final User user = User.createUser()
+//                                      .withId(parts[0])
+//                                      .as(gender)
+//                                      .withAge(Integer.parseInt(parts[2]))
+//                                      .withOccupation(map.get(parts[3]))
+//                                      .withZipCode(parts[4]);
                 userList.add(user);
             }
         } catch (final FileNotFoundException ex) {
