@@ -1,6 +1,7 @@
 package net.coderodde.associationanalysis.model.support;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -56,7 +57,7 @@ extends AbstractFrequentItemsetGenerator<I> {
         final List<Set<I>> frequentItemsetList = new ArrayList<>();
         
         // The actual computation begins here.
-        fpGrowth(tree, frequentItemsetList);
+        fpGrowth(tree, new HashSet<I>(), frequentItemsetList);
         
         // Return the results of the computation.
         return new FrequentItemsetData<>(frequentItemsetList, 
@@ -115,11 +116,11 @@ extends AbstractFrequentItemsetGenerator<I> {
     }
         
     private static <I extends Comparable<? super I>> 
-    void fpGrowth(FPTree<I> tree, List<Set<I>> alpha) {
+    void fpGrowth(FPTree<I> tree, Set<I> alpha, List<Set<I>> list) {
         final int minimumCount = tree.getPathSupportCount();
         
         if (minimumCount > 0) {
-            alpha.addAll(extractItemsets(tree));
+            list.addAll(extractItemsetsFromPath(alpha, tree));
             return;
         }
         
@@ -127,8 +128,56 @@ extends AbstractFrequentItemsetGenerator<I> {
         
         for (final Object itemObject : itemArray) {
             final I item = (I) itemObject;
+            final Set<I> beta = new HashSet<>(alpha.size() + 1);
             
+            beta.addAll(alpha);
+            beta.add(item);
+            
+            final FPTree<I> nextTree = tree.getConditionalFPTree(item);
+            
+            if (!nextTree.isEmpty()) {
+                fpGrowth(nextTree, alpha, list);
+            }
         }
     }
      
+    private static <I extends Comparable<? super I>> 
+        List<Set<I>> extractItemsetsFromPath(Set<I> alpha,
+                                             FPTree<I> path) {
+        final List<I> list = path.toItemList();
+        final BitSet bs = new BitSet(list.size());
+        final List<Set<I>> ret = new ArrayList<>();
+        
+        do {
+            bitsetIncrement(bs);
+            ret.add(extractCombination(list, bs));
+        } while (bs.length() != list.size());
+        
+        
+        return ret;
+    }
+        
+    private static <I extends Comparable<? super I>> 
+    Set<I> extractCombination(List<I> itemList, BitSet bs) {
+        final Set<I> ret = new HashSet<>(bs.size());
+        
+        for (int i = 0; i < bs.size(); ++i) {
+            if (bs.get(i)) {
+                ret.add(itemList.get(i));
+            }
+        }
+        
+        return ret;
+    }
+        
+    private static void bitsetIncrement(BitSet bs) {
+        for (int i = 0; i < bs.size(); ++i) {
+            if (!bs.get(i)) {
+                bs.set(i);
+                return;
+            } else {
+                bs.clear(i);
+            }
+        }
+    }
 }

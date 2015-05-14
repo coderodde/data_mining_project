@@ -116,6 +116,15 @@ extends AbstractSupportCountFunction<I> {
     }
     
     /**
+     * Checks whether this FP-tree is empty.
+     * 
+     * @return <code>true</code> if and only if this tree.
+     */
+    public boolean isEmpty() {
+        return root.childMap.isEmpty();
+    }
+    
+    /**
      * If this tree is simply a path, returns the minimum support count of nodes
      * in this tree (path). Otherwise returns -1.
      * 
@@ -133,6 +142,21 @@ extends AbstractSupportCountFunction<I> {
         }
         
         return minimumCount;
+    }
+    
+    /**
+     * Returns the list containing unique items of this tree.
+     * 
+     * @return the list of unique items.
+     */
+    public List<I> toItemList() {
+        final Set<I> set = new HashSet<>();
+        
+        for (final FPTreeNode<I> node : root.childMap.values()) {
+            toItemList(node, set);
+        }
+        
+        return new ArrayList<>(set);
     }
     
     /**
@@ -415,6 +439,14 @@ extends AbstractSupportCountFunction<I> {
             map.put(newnode.item, newnode);
             thisTreeNode.childMap.put(newnode.item, newnode);
             copyFPTreeNode(newnode, n);
+        }
+    }
+    
+    private void toItemList(FPTreeNode<I> node, Set<I> set) {
+        set.add(node.item);
+        
+        for (FPTreeNode<I> childNode : node.childMap.values()) {
+            toItemList(childNode, set);
         }
     }
 }
