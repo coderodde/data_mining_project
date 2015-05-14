@@ -1,11 +1,15 @@
 package net.coderodde.associationanalysis.model.support;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 import net.coderodde.associationanalysis.model.AbstractDatabase;
 import net.coderodde.associationanalysis.model.AbstractFrequentItemsetGenerator;
 import net.coderodde.associationanalysis.model.AbstractSupportCountFunction;
@@ -274,5 +278,90 @@ public class AprioriFrequentItemsetGeneratorTest {
         
         assertFalse(frequentItemsetList.contains(work));
         assertEquals(0, sf.getSupportCount(work));
+    }
+    
+    @Test
+    public void testFindFrequentItemsets2() {
+        final List<Set<String>> transactionList = new ArrayList<>();
+        transactionList.add(asSet("a", "b"));
+        transactionList.add(asSet("b", "c", "d"));
+        transactionList.add(asSet("a", "c", "d", "e"));
+        transactionList.add(asSet("a", "d", "e"));
+        transactionList.add(asSet("a", "b", "c"));
+        transactionList.add(asSet("a", "b", "c", "d"));
+        transactionList.add(asSet("a"));
+        transactionList.add(asSet("a", "b", "c"));
+        transactionList.add(asSet("a", "b", "d"));
+        transactionList.add(asSet("b", "c", "e"));
+        
+        final StringDatabase db = new StringDatabase(transactionList);
+        final double minimumSupport = 2.0 / db.size();
+        final Comparator<String> cmp = new Comparator<String>() {
+
+            @Override
+            public int compare(String o1, String o2) {
+                return o1.compareTo(o2);
+            }
+        };
+        
+        final FrequentItemsetData<String> data = 
+                new AprioriFrequentItemsetGenerator<>(cmp)
+                .findFrequentItemsets(db.select(), minimumSupport);
+        
+        assertEquals(19, data.getFrequentItemsets().size());
+        
+        final String a = "a";
+        final String b = "b";
+        final String c = "c";
+        final String d = "d";
+        final String e = "e";
+        
+        assertTrue(data.getFrequentItemsets().contains(asSet(e)));
+        assertTrue(data.getFrequentItemsets().contains(asSet(d, e)));
+        assertTrue(data.getFrequentItemsets().contains(asSet(a, d, e)));
+        assertTrue(data.getFrequentItemsets().contains(asSet(c, e)));
+        assertTrue(data.getFrequentItemsets().contains(asSet(a, e)));
+        
+        assertTrue(data.getFrequentItemsets().contains(asSet(d)));
+        assertTrue(data.getFrequentItemsets().contains(asSet(c, d)));
+        assertTrue(data.getFrequentItemsets().contains(asSet(b, c, d)));
+        assertTrue(data.getFrequentItemsets().contains(asSet(a, c, d)));
+        assertTrue(data.getFrequentItemsets().contains(asSet(b, d)));
+        
+        assertTrue(data.getFrequentItemsets().contains(asSet(a, b, d)));
+        assertTrue(data.getFrequentItemsets().contains(asSet(a, d)));
+        assertTrue(data.getFrequentItemsets().contains(asSet(c)));
+        assertTrue(data.getFrequentItemsets().contains(asSet(b, c)));
+        assertTrue(data.getFrequentItemsets().contains(asSet(a, b, c)));
+        
+        assertTrue(data.getFrequentItemsets().contains(asSet(a, c)));
+        assertTrue(data.getFrequentItemsets().contains(asSet(b)));
+        assertTrue(data.getFrequentItemsets().contains(asSet(a, b)));
+        assertTrue(data.getFrequentItemsets().contains(asSet(a)));
+        
+        assertFalse(data.getFrequentItemsets().contains(asSet(a, b, c, d,e )));
+    }
+    
+    static class StringDatabase extends AbstractDatabase<Object, String> {
+
+        private final List<Set<String>> transactionList;
+        
+        public StringDatabase(List<Set<String>> transactionList) {
+            this.transactionList = new ArrayList<>(transactionList);
+        }
+        
+        @Override
+        public List<Set<String>> select(Predicate<Object>... predicates) {
+            return Collections.unmodifiableList(transactionList);
+        }
+
+        @Override
+        public int size() {
+            return transactionList.size();
+        }
+    }
+    
+    static Set<String> asSet(String... strings) {
+        return new HashSet<>(Arrays.asList(strings));
     }
 }
