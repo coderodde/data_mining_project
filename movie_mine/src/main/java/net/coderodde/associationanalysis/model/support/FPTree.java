@@ -41,6 +41,12 @@ extends AbstractSupportCountFunction<I> {
         private FPTreeNode<I> next;
         
         /**
+         * Caches the parent node of this node. Needed in count updating
+         * whenever dealing with paths.
+         */
+        private FPTreeNode<I> parent;
+        
+        /**
          * Maps each child to the tree node containing it.
          */
         private final Map<I, FPTreeNode<I>> childMap;
@@ -50,7 +56,7 @@ extends AbstractSupportCountFunction<I> {
          * 
          * @param item the item for this node.
          */
-        FPTreeNode(I item) {
+        FPTreeNode(I item, FPTreeNode<I> parent) {
             this.item = item;
             this.count = 1;
             this.childMap = new HashMap<>();
@@ -79,14 +85,21 @@ extends AbstractSupportCountFunction<I> {
     private final Map<I, FPTreeNode<I>> map;
     
     /**
+     * The minimum support count for guaranteeing frequentness.
+     */
+    private final int minimumSupportCount;
+    
+    /**
      * Constructs a new FP-tree.
      * 
-     * @param transactionAmount the amount of transactions this tree covers.
+     * @param transactionAmount   the amount of transactions this tree covers.
+     * @param minimumSupportCount the minimum support count.
      */
-    public FPTree(int transactionAmount) {
+    public FPTree(int transactionAmount, int minimumSupportCount) {
         super(transactionAmount);
         this.map = new HashMap<>();
-        this.root = new FPTreeNode(null);
+        this.root = new FPTreeNode(null, null);
+        this.minimumSupportCount = minimumSupportCount;
     }
     
     /**
@@ -95,7 +108,7 @@ extends AbstractSupportCountFunction<I> {
      * @param other the FP-tree to copy.
      */
     public FPTree(FPTree<I> other) {
-        this(other.transactionAmount);
+        this(other.transactionAmount, other.minimumSupportCount);
         copyFPTreeNode(root, other.root);
     }
     
@@ -115,6 +128,132 @@ extends AbstractSupportCountFunction<I> {
         final FPTree<I> other = (FPTree<I>) o;
         
         return equals(this.root, other.root);
+    }
+    
+    
+    /**
+     * Returns the support count of <code>itemset</code>.
+     * 
+     * @param  itemset the target itemset.
+     * @return the support count.
+     */
+    @Override
+    public int getSupportCount(Set<I> itemset) {
+        return Integer.MIN_VALUE;
+    }
+
+    /**
+     * Adds the <code>itemset</code> to this FP-tree.
+     * 
+     * @param itemset      the itemset to add.
+     * @param supportCount ignored.
+     */
+    @Override
+    public void putSupportCount(Set<I> itemset, int supportCount) {
+        final List<I> itemlist = new ArrayList<>(itemset);
+        Collections.sort(itemlist);
+        
+        FPTreeNode<I> current = root;
+        FPTreeNode<I> child;
+        
+        int itemIndex = 0;
+        
+        while ((child = current
+                        .getChildNode(itemlist.get(itemIndex))) != null) {
+            child.parent = current;
+            current = child;
+            current.count++;
+            itemIndex++;
+            
+            if (!map.containsKey(current.item)) {
+                map.put(current.item, current);
+            } else if (map.get(current.item) != current) {
+                current.next = map.get(current.item);
+                map.put(current.item, current);
+            }
+        } 
+        
+        while (itemIndex < itemlist.size()) {
+            final I item = itemlist.get(itemIndex++);
+            final FPTreeNode<I> node = new FPTreeNode<>(item, current);
+            
+            current.childMap.put(item, node);
+            current = node;
+            
+            if (!map.containsKey(item)) {
+                map.put(item, node);
+            } else {
+                node.next = map.get(item);
+                map.put(item, node);
+            }
+        }
+    }
+    
+    public FPTree<I> getConditionalFPTree(I item) {
+        final FPTree<I> tree = clone();
+        FPTreeNode<I> node = tree.map.get(item);
+        int supportCount = 0;
+        
+        for (; node != null; node = node.next) {
+            supportCount += node.count;
+        }
+        
+        if (supportCount < minimumSupportCount) {
+            throw new IllegalStateException("Debug me.");
+        }
+        
+        // Set all counts of the conditional tree to zero.
+        tree.clearCount();
+        
+        node = tree.map.get(item);
+        
+        // Count the new counts of the conditional tree.
+        for (; node != null; node = node.next) {
+            FPTreeNode<I> other = node.parent;
+            
+            for (; other != null; other = other.parent) {
+                other.count++;
+            }
+        }
+        
+        node = tree.map.get(item);
+        // Remove the chain of nodes holding 'item'.
+        
+        for (; node != null; node = node.next) {
+            
+        }
+        
+        return tree;
+    }
+    
+    /**
+     * Clones this FP-tree and returns the clone.
+     * 
+     * @return a FP-tree.
+     */
+    @Override
+    public FPTree<I> clone() {
+        return new FPTree<>(this);
+    }
+    
+    /**
+     * Clears the counts of each node in this tree.
+     */
+    private void clearCount() {
+        clearCount(root);
+    }
+    
+    /**
+     * Implements the routine for zeroing tree node counts.
+     * 
+     * @param node the root node of the subtree to clear.
+     */
+    private void clearCount(FPTreeNode<I> node) {
+        node.count = 0;
+        
+        for (final FPTreeNode<I> child : map.values()) {
+            clearCount(node);
+        }
     }
     
     /**
@@ -165,10 +304,9 @@ extends AbstractSupportCountFunction<I> {
      */
     private void copyFPTreeNode(FPTreeNode<I> thisTreeNode,
                                 FPTreeNode<I> otherTreeNode) {
-        int i = 0;
-        ++i;
         for (final FPTreeNode<I> n : otherTreeNode.childMap.values()) {
-            final FPTreeNode<I> newnode = new FPTreeNode<>(n.item);
+            final FPTreeNode<I> newnode = new FPTreeNode<>(n.item, 
+                                                           thisTreeNode);
             newnode.count = n.count;
             
             if (map.containsKey(newnode.item)) {
@@ -179,72 +317,5 @@ extends AbstractSupportCountFunction<I> {
             thisTreeNode.childMap.put(newnode.item, newnode);
             copyFPTreeNode(newnode, n);
         }
-    }
-    
-    /**
-     * Returns the support count of <code>itemset</code>.
-     * 
-     * @param  itemset the target itemset.
-     * @return the support count.
-     */
-    @Override
-    public int getSupportCount(final Set<I> itemset) {
-        return Integer.MIN_VALUE;
-    }
-
-    /**
-     * Adds the <code>itemset</code> to this FP-tree.
-     * 
-     * @param itemset      the itemset to add.
-     * @param supportCount ignored.
-     */
-    @Override
-    public void putSupportCount(Set<I> itemset, int supportCount) {
-        final List<I> itemlist = new ArrayList<>(itemset);
-        Collections.sort(itemlist);
-        
-        FPTreeNode<I> current = root;
-        FPTreeNode<I> child;
-        
-        int itemIndex = 0;
-        
-        while ((child = current
-                        .getChildNode(itemlist.get(itemIndex))) != null) {
-            current = child;
-            current.count++;
-            itemIndex++;
-            
-            if (!map.containsKey(current.item)) {
-                map.put(current.item, current);
-            } else if (map.get(current.item) != current) {
-                current.next = map.get(current.item);
-                map.put(current.item, current);
-            }
-        } 
-        
-        while (itemIndex < itemlist.size()) {
-            final I item = itemlist.get(itemIndex++);
-            final FPTreeNode<I> node = new FPTreeNode<>(item);
-            
-            current.childMap.put(item, node);
-            current = node;
-            
-            if (!map.containsKey(item)) {
-                map.put(item, node);
-            } else {
-                node.next = map.get(item);
-                map.put(item, node);
-            }
-        }
-    }
-    
-    /**
-     * Clones this FP-tree and returns the clone.
-     * 
-     * @return a FP-tree.
-     */
-    @Override
-    public FPTree<I> clone() {
-        return new FPTree<>(this);
     }
 }

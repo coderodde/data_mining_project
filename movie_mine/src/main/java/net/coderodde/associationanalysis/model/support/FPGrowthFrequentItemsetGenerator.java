@@ -48,7 +48,16 @@ extends AbstractFrequentItemsetGenerator<I> {
         final List<I> list = new ArrayList<>(categories.frequentItems);
         Collections.<I>sort(list);
         
-        return null;
+        final List<Set<I>> frequentItemsetList = new ArrayList<>();
+        
+        // The actual FP-growth algorithm.
+        for (int i = list.size() - 1; i >= 0; --i) {
+            fpGrowthImpl(list, i, tree, frequentItemsetList);
+        }
+        
+        return new FrequentItemsetData<>(frequentItemsetList, 
+                                         tree, 
+                                         transactionList.size());
     }
     
     private static class ItemCategories<T> {
@@ -61,8 +70,9 @@ extends AbstractFrequentItemsetGenerator<I> {
         }
     }
         
-    private ItemCategories<I> findInfrequentItems(List<Set<I>> transactionList,
-                                                 double minimumSupport) {
+    private static <I> ItemCategories<I> 
+        findInfrequentItems(List<Set<I>> transactionList,
+                            double minimumSupport) {
         final Map<I, Integer> map = new HashMap<>();
         
         for (final Set<I> transaction : transactionList) {
@@ -86,6 +96,16 @@ extends AbstractFrequentItemsetGenerator<I> {
         return new ItemCategories<>(frequentSet, infrequentSet);
     }
         
+    private static <I extends Comparable<? super I>> 
+        void fpGrowthImpl(List<I> itemList,
+                          int index,
+                          FPTree<I> tree, 
+                          List<Set<I>> frequentItemsetList) {
+        for (int i = index - 1; i >= 0; --i) {
+            fpGrowthImpl(itemList, i, tree, frequentItemsetList);
+        }
+    }
+    
     /**
      * Returns the list of frequent <b>items</b> (<b>not</b> itemsets). The 
      * routine prunes all infrequent items as all itemsets containing at least 
