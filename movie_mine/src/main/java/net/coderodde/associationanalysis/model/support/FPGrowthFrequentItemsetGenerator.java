@@ -30,11 +30,13 @@ extends AbstractFrequentItemsetGenerator<I> {
         findFrequentItemsets(final List<Set<I>> transactionList,
                              final double minimumSupport) {
         final FPTree<I> tree = new FPTree<>(transactionList.size());
-        final Set<I> infrequentItems = findInfrequentItems(transactionList,
-                                                           minimumSupport);
+        final ItemCategories<I> categories = 
+                findInfrequentItems(transactionList,
+                                    minimumSupport);
+        final Set<I> infrequentSet = categories.infrequentItems;
         
         for (final Set<I> itemset : transactionList) {
-            if (!Collections.disjoint(infrequentItems, itemset)) {
+            if (!Collections.disjoint(infrequentSet, itemset)) {
                 // 'itemset' contains an infrequent item. Cannot be frequent.
                 continue;
             }
@@ -43,13 +45,24 @@ extends AbstractFrequentItemsetGenerator<I> {
             tree.putSupportCount(itemset, Integer.MIN_VALUE);
         }
         
-        
+        final List<I> list = new ArrayList<>(categories.frequentItems);
+        Collections.<I>sort(list);
         
         return null;
     }
     
-    private Set<I> findInfrequentItems(List<Set<I>> transactionList,
-                                       double minimumSupport) {
+    private static class ItemCategories<T> {
+        private final Set<T> frequentItems;
+        private final Set<T> infrequentItems;
+        
+        ItemCategories(Set<T> frequentItems, Set<T> infrequentItems) {
+            this.frequentItems = frequentItems;
+            this.infrequentItems = infrequentItems;
+        }
+    }
+        
+    private ItemCategories<I> findInfrequentItems(List<Set<I>> transactionList,
+                                                 double minimumSupport) {
         final Map<I, Integer> map = new HashMap<>();
         
         for (final Set<I> transaction : transactionList) {
@@ -62,17 +75,15 @@ extends AbstractFrequentItemsetGenerator<I> {
             }
         }
         
-        final Set<I> ret = new HashSet<>();
+        final Set<I> frequentSet = new HashSet<>();
+        final Set<I> infrequentSet = new HashSet<>();
         
         for (final I item : map.keySet()) {
             final double support = 1.0 * map.get(item) / transactionList.size();
-            
-            if (support < minimumSupport) {
-                ret.add(item);
-            }
+            (support < minimumSupport ? infrequentSet : frequentSet).add(item);
         }
         
-        return ret;
+        return new ItemCategories<>(frequentSet, infrequentSet);
     }
         
     /**

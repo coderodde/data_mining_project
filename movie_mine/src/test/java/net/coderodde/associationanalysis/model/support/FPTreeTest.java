@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.junit.Test;
+import static org.junit.Assert.*;
 
 public class FPTreeTest {
 
@@ -22,6 +23,8 @@ public class FPTreeTest {
             tree.putSupportCount(transaction, 0);
         }
         
-        System.out.println("yo");
+        final FPTree<String> clone = tree.clone();
+        
+        assertEquals(tree, clone);
     }
 }
