@@ -1,8 +1,11 @@
 package net.coderodde.associationanalysis.model.support;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -113,6 +116,60 @@ extends AbstractSupportCountFunction<I> {
     }
     
     /**
+     * If this tree is simply a path, returns the minimum support count of nodes
+     * in this tree (path). Otherwise returns -1.
+     * 
+     * @return the minimum count of this path, or -1 if this tree is not a path.
+     */
+    public int getPathSupportCount() {
+        if (!isPath()) {
+            return -1;
+        }
+        
+        int minimumCount = Integer.MAX_VALUE;
+        
+        for (FPTreeNode<I> node : map.values()) {
+            minimumCount = Math.min(minimumCount, node.count);
+        }
+        
+        return minimumCount;
+    }
+    
+    /**
+     * Returns an array of header items.
+     * 
+     * @return an array.
+     */
+    public Object[] getHeaderItems() {
+        final Object[] itemArray = map.keySet().toArray();
+        final Map<Object, Integer> countMap = new HashMap<>();
+        
+        FPTreeNode<I> node;
+        
+        for (final Object itemObject : itemArray) {
+            final I item = (I) itemObject;
+            int count = 0;
+            
+            for (node = map.get(item); node != null; node = node.next) {
+                count += node.count;
+            }
+            
+            countMap.put(item, count);
+        }
+        
+        // Sorts such that the items with larger counts appear at the beginning
+        // of the item array.
+        Arrays.sort(itemArray, new Comparator<Object>() {
+            @Override
+            public int compare(Object o1, Object o2) {
+                return Integer.compare(countMap.get(o2), countMap.get(o1));
+            }
+        });
+        
+        return itemArray;
+    }
+    
+    /**
      * Checks whether this tree and <code>o</code> represent the same FP-tree.
      * 
      * @param  o the object for equality test. 
@@ -205,10 +262,8 @@ extends AbstractSupportCountFunction<I> {
         // Set all counts of the conditional tree to zero.
         tree.clearCount();
         
-        node = tree.map.get(item);
-        
         // Count the new counts of the conditional tree.
-        for (; node != null; node = node.next) {
+        for (node = tree.map.get(item); node != null; node = node.next) {
             FPTreeNode<I> other = node.parent;
             
             for (; other != null; other = other.parent) {
@@ -216,11 +271,38 @@ extends AbstractSupportCountFunction<I> {
             }
         }
         
-        node = tree.map.get(item);
         // Remove the chain of nodes holding 'item'.
+        for (node = tree.map.get(item); node != null; node = node.next) {
+            node.parent.childMap.remove(item);
+            node.parent = null;
+        }
         
-        for (; node != null; node = node.next) {
+        final Set<I> removedItems = new HashSet<>();
+        
+        // Remove all the nodes with too small support.
+        for (FPTreeNode<I> current : tree.map.values()) {
+            int count = 0;
             
+            for (node = current; node != null; node = node.next) {
+                count += node.count;
+            }
+            
+            if (count < minimumSupportCount) {
+                removedItems.add(current.item);
+                // Remove from the tree.
+                
+                final List<FPTreeNode<I>> children = 
+                        new ArrayList<>(current.childMap.values());
+                
+                for (final FPTreeNode<I> child : children) {
+                    current.parent.childMap.put(child.item, child);
+                    child.parent = current.parent;
+                }
+            }
+        }
+        
+        for (final I i : removedItems) {
+            tree.map.remove(i);
         }
         
         return tree;
@@ -234,6 +316,23 @@ extends AbstractSupportCountFunction<I> {
     @Override
     public FPTree<I> clone() {
         return new FPTree<>(this);
+    }
+    
+    /**
+     * Checks whether this tree contains just a single branch. In other words,
+     * checks whether this tree is simply a path (with one root and one leaf
+     * node).
+     * 
+     * @return <code>true</code> if this tree consists of a single path.
+     */
+    private boolean isPath() {
+        for (final Map.Entry<I, FPTreeNode<I>> entry : map.entrySet()) {
+            if (entry.getValue().next != null) {
+                return false;
+            }
+        }
+        
+        return true;
     }
     
     /**
