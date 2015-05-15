@@ -70,22 +70,6 @@ extends AbstractSupportCountFunction<I> {
         FPTreeNode<I> getChildNode(I item) {
             return childMap.get(item);
         }
-        
-        @Override
-        public int hashCode() {
-            return item.hashCode() ^ childMap.hashCode();
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (!(obj instanceof FPTreeNode)) {
-                return false;
-            }
-            
-            final FPTreeNode<I> other = (FPTreeNode<I>) obj;
-            return this.item.equals(other.item) 
-                    && this.childMap.equals(other.childMap);
-        }
     }
     
     /**
@@ -124,6 +108,7 @@ extends AbstractSupportCountFunction<I> {
     public FPTree(FPTree<I> other) {
         this(other.transactionAmount, other.minimumSupportCount);
         copyFPTreeNode(root, other.root);
+        System.out.println("Constr: cycles " + this.mapIsCircular());
     }
     
     /**
@@ -296,12 +281,13 @@ extends AbstractSupportCountFunction<I> {
      */
     public FPTree<I> getConditionalFPTree(I item) {
         final FPTree<I> tree = clone();
+        System.out.println("Begin: cycles " + tree.mapIsCircular());
         
         // Update the counts.
         tree.updateCounts(item);
-        
+        System.out.println("After count update: " + tree.mapIsCircular());
         // Remove the chain for 'item'.
-        removeItemChain(item);
+        tree.removeItemChain(item);
         
         // Remove infrequent items.
         tree.removeInfrequentItemChains();
@@ -346,48 +332,7 @@ extends AbstractSupportCountFunction<I> {
      * Prunes the infrequent items from this tree.
      */
     private void removeInfrequentItemChains() {
-        final Map<FPTreeNode<I>, FPTreeNode<I>> parentMap = getParentMap();
-        final Set<I> keysToRemove = new HashSet<>();
         
-        for (final FPTreeNode<I> node : map.values()) {
-            int count = 0;
-            
-            // Count the support count for 'node.item'.
-            for (FPTreeNode<I> tmp = node; tmp != null; tmp = tmp.next) {
-                count += node.count;
-            }
-            
-            if (count < minimumSupportCount) {
-                // Remove all the nodes with items 'tmp.item'.
-                for (FPTreeNode<I> tmp = node; tmp != null; tmp = tmp.next) {
-                    final FPTreeNode<I> parent = parentMap.get(tmp);
-                    
-                    if (parent == null) {
-                        // tmp is the root (also called null) node.
-                        root.childMap.remove(tmp.item);
-                        
-                        for (final Map.Entry<I, FPTreeNode<I>> entry :
-                                tmp.childMap.entrySet()) {
-                            root.childMap.put(entry.getKey(), entry.getValue());
-                        }
-                    } else {
-                        parent.childMap.remove(tmp.item);
-
-                        for (final Map.Entry<I, FPTreeNode<I>> entry : 
-                                tmp.childMap.entrySet()) {
-                            parent.childMap.put(entry.getKey(), 
-                                                entry.getValue());
-                        }
-                    }
-                }
-                
-                keysToRemove.add(node.item);
-            }
-        }
-        
-        for (final I itemKey : keysToRemove) {
-            map.remove(itemKey);
-        }
     }
     
     /**
