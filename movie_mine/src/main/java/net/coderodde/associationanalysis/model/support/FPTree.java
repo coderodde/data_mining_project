@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -42,12 +43,6 @@ extends AbstractSupportCountFunction<I> {
          * Link to the next node holding the same item.
          */
         private FPTreeNode<I> next;
-        
-        /**
-         * Caches the parent node of this node. Needed in count updating
-         * whenever dealing with paths.
-         */
-        private FPTreeNode<I> parent;
         
         /**
          * Maps each child to the tree node containing it.
@@ -181,12 +176,12 @@ extends AbstractSupportCountFunction<I> {
             countMap.put(item, count);
         }
         
-        // Sorts such that the items with larger counts appear at the beginning
+        // Sorts such that the items with smaller counts appear at the beginning
         // of the item array.
         Arrays.sort(itemArray, new Comparator<Object>() {
             @Override
             public int compare(Object o1, Object o2) {
-                return Integer.compare(countMap.get(o2), countMap.get(o1));
+                return Integer.compare(countMap.get(o1), countMap.get(o2));
             }
         });
         
@@ -241,7 +236,6 @@ extends AbstractSupportCountFunction<I> {
         
         while ((child = current
                         .getChildNode(itemlist.get(itemIndex))) != null) {
-            child.parent = current;
             current = child;
             current.count++;
             itemIndex++;
@@ -270,66 +264,120 @@ extends AbstractSupportCountFunction<I> {
         }
     }
     
+    /**
+     * Generates and returns a conditional FP-tree from <code>item</code>.
+     * 
+     * @param  item the item to exclude.
+     * @return a conditional FP-tree.
+     */
     public FPTree<I> getConditionalFPTree(I item) {
         final FPTree<I> tree = clone();
-        FPTreeNode<I> node = tree.map.get(item);
-        int supportCount = 0;
         
-        for (; node != null; node = node.next) {
-            supportCount += node.count;
-        }
+        // Update the counts.
+        tree.updateCounts(item);
         
-        if (supportCount < minimumSupportCount) {
-            throw new IllegalStateException("Debug me.");
-        }
+        // Remove the chain for 'item'.
+        removeChain(tree.root, item);
         
-        // Set all counts of the conditional tree to zero.
-        tree.clearCount();
+        // Remove infrequent items.
+        tree.removeInfrequentItems();
+        return tree;
+    }
+    
+    /**
+     * Updates the counts of this tree prior to removing all nodes holding 
+     * <code>item</code>.
+     * 
+     * @param item the target item.
+     */
+    private void updateCounts(I item) {
+        this.clearCount();
         
-        // Count the new counts of the conditional tree.
-        for (node = tree.map.get(item); node != null; node = node.next) {
-            FPTreeNode<I> other = node.parent;
+        final Map<FPTreeNode<I>, FPTreeNode<I>> parentMap = getParentMap();
+        
+        FPTreeNode<I> current = map.get(item);
+        
+        for (; current != null; current = current.next) {
+            FPTreeNode<I> tmp = parentMap.get(current);
             
-            for (; other != null; other = other.parent) {
-                other.count++;
+            for (; tmp != null; tmp = parentMap.get(tmp)) {
+                tmp.count++;
             }
         }
+    }
+    
+    /**
+     * Prunes the infrequent items from this tree.
+     */
+    private void removeInfrequentItems() {
+        final Map<FPTreeNode<I>, FPTreeNode<I>> parentMap = getParentMap();
+        final Set<I> keysToRemove = new HashSet<>();
         
-        // Remove the chain of nodes holding 'item'.
-        for (node = tree.map.get(item); node != null; node = node.next) {
-            node.parent.childMap.remove(item);
-            node.parent = null;
-        }
-        
-        final Set<I> removedItems = new HashSet<>();
-        
-        // Remove all the nodes with too small support.
-        for (FPTreeNode<I> current : tree.map.values()) {
+        for (final FPTreeNode<I> node : map.values()) {
             int count = 0;
             
-            for (node = current; node != null; node = node.next) {
+            // Count the support count for 'node'.
+            for (FPTreeNode<I> tmp = node; tmp != null; tmp = tmp.next) {
                 count += node.count;
             }
             
             if (count < minimumSupportCount) {
-                removedItems.add(current.item);
-                // Remove from the tree.
+                // Remove all the FP-tree nodes holding item 'node.item'.
+                final FPTreeNode<I> parent = parentMap.get(node);
                 
-                final List<FPTreeNode<I>> children = 
-                        new ArrayList<>(current.childMap.values());
-                
-                for (final FPTreeNode<I> child : children) {
-                    current.parent.childMap.put(child.item, child);
-                    child.parent = current.parent;
+                for (final Map.Entry<I, FPTreeNode<I>> e 
+                        : node.childMap.entrySet()) {
+                    parent.childMap.put(e.getKey(), e.getValue());
                 }
+                
+                keysToRemove.add(node.item);
             }
         }
         
-        for (final I i : removedItems) {
-            tree.map.remove(i);
+        for (final I itemKey : keysToRemove) {
+            map.remove(itemKey);
         }
+    }
+    
+    /**
+     * Computes a map which maps each FP-tree node to its parent FP-tree node.
+     * 
+     * @return a map.
+     */
+    private Map<FPTreeNode<I>, FPTreeNode<I>> getParentMap() {
+        final Map<FPTreeNode<I>, FPTreeNode<I>> map = new HashMap<>();
+        final Map<I, FPTreeNode<I>> tmp = root.childMap;
         
-        return tree;
+        Iterator<Map.Entry<I, FPTreeNode<I>>> it = tmp.entrySet().iterator();
+        FPTreeNode<I> current = it.next().getValue();
+        
+        map.put(current, null);
+        getParentMap(map, current);
+        
+        return map;
+    }
+    
+    /**
+     * Implements <code>getParentMap</code>.
+     * 
+     * @param map  the map for accumulating the mappings.
+     * @param node the node to process.
+     */
+    private void getParentMap(Map<FPTreeNode<I>, FPTreeNode<I>> map, 
+                              FPTreeNode<I> node) {
+        for (final FPTreeNode<I> child : node.childMap.values()) {
+            map.put(child, node);
+        }
+    }
+    
+    private void removeChain(FPTreeNode<I> node, I item) {
+        if (node.childMap.containsKey(item)) {
+            node.childMap.remove(item);
+        } else {
+            for (final FPTreeNode<I> child : node.childMap.values()) {
+                removeChain(child, item);
+            }
+        }
     }
     
     /**

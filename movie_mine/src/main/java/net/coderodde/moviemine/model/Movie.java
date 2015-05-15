@@ -3,7 +3,6 @@ package net.coderodde.moviemine.model;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import static net.coderodde.util.Validation.checkNotNull;
@@ -14,7 +13,7 @@ import static net.coderodde.util.Validation.checkNotNull;
  * @author Rodion Efremov
  * @version 1.6
  */
-public class Movie {
+public class Movie implements Comparable<Movie> {
     
     /**
      * Holds the ID of this movie.
@@ -134,6 +133,17 @@ public class Movie {
      */
     public static MovieIdSelector createMovie() {
         return new MovieIdSelector();
+    }
+
+    /**
+     * Compares this movie and <code>o</code> by lexicographic order.
+     * 
+     * @param  o another movie.
+     * @return an integer denoting order.
+     */
+    @Override
+    public int compareTo(Movie o) {
+        return getTitle().compareTo(o.getTitle());
     }
     
     /**

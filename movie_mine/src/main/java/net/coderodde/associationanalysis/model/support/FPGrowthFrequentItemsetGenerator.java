@@ -146,7 +146,7 @@ extends AbstractFrequentItemsetGenerator<I> {
             final FPTree<I> nextTree = tree.getConditionalFPTree(item);
             
             if (!nextTree.isEmpty()) {
-                fpGrowth(nextTree, betas, list);
+                fpGrowth(nextTree, beta, list);
             }
         }
     }
@@ -167,15 +167,16 @@ extends AbstractFrequentItemsetGenerator<I> {
         final List<I> list = path.toItemList();
         final BitSet bs = new BitSet(list.size());
         final List<Set<I>> ret = new ArrayList<>();
-        final long combinationAmount = pow2(list.size());
+        // Don't do empty combination. So -1.
+        final long combinationAmount = pow2(list.size()) - 1L;
         
         for (long l = 0; l < combinationAmount; ++l) {
+            bitsetIncrement(bs);
             final Set<I> combination = extractCombination(list, bs);
             final Set<I> tmp = new HashSet<>(combination.size() + alpha.size());
             tmp.addAll(alpha);
             tmp.addAll(combination);    
             ret.add(tmp);
-            bitsetIncrement(bs);
         }
         
         return ret;
