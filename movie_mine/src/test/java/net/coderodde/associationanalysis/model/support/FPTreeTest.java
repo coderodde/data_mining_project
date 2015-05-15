@@ -27,4 +27,34 @@ public class FPTreeTest {
         
         assertEquals(tree, clone);
     }
+    
+    @Test
+    public void testDebug() {
+        final String a = "a";
+        final String b = "b";
+        final String c = "c";
+        final String d = "d";
+        final String e = "e";
+        
+        final FPTree<String> tree = new FPTree<>(10, 2);
+        
+        tree.putSupportCount(asSet(a, b), 0);
+        tree.putSupportCount(asSet(b, c, d), 0);
+        tree.putSupportCount(asSet(a, c, d, e), 0);
+        tree.putSupportCount(asSet(a, d, e), 0);
+        tree.putSupportCount(asSet(a, b, c), 0);
+        tree.putSupportCount(asSet(a, b, c, d), 0);
+        tree.putSupportCount(asSet(a), 0);
+        tree.putSupportCount(asSet(a, b, c), 0);
+        tree.putSupportCount(asSet(a, b, d), 0);
+        tree.putSupportCount(asSet(b, c, e), 0);
+        
+        final FPTree<String> other = tree.getConditionalFPTree(e);
+        
+        System.out.println("Yeah!!");
+    }
+    
+    public static <I> Set asSet(I... items) {
+        return new HashSet<>(Arrays.asList(items));
+    }
 }

@@ -36,6 +36,7 @@ extends AbstractFrequentItemsetGenerator<I> {
         // The initial FP-tree.
         final FPTree<I> tree = new FPTree<>(transactionList.size(), 
                                             minimumSupportCount);
+        
         // Find infrequent items (not itemsets!).
         final ItemCategories<I> categories = 
                 splitItems(transactionList,

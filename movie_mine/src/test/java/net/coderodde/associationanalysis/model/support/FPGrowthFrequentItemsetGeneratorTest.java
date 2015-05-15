@@ -85,7 +85,6 @@ public class FPGrowthFrequentItemsetGeneratorTest {
         final AbstractFrequentItemsetGenerator<Movie> generator =
                 new FPGrowthFrequentItemsetGenerator<>();
         
-        System.out.println("Yeee");
         final FrequentItemsetData<Movie> data =
                 generator.findFrequentItemsets(db.select(), 0.4);   
         
@@ -102,7 +101,7 @@ public class FPGrowthFrequentItemsetGeneratorTest {
         assertTrue(data.getFrequentItemsets().contains(asSet(m1, m2, m3)));
     }
     
-//    @Test
+    @Test
     public void testFindFrequentItemsets() {
         final List<User> userList = new ArrayList<>();
         final List<Movie> movieList = new ArrayList<>();
