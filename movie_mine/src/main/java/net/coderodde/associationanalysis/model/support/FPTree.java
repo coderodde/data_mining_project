@@ -9,7 +9,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import net.coderodde.associationanalysis.model.AbstractSupportCountFunction;
 
@@ -55,7 +54,7 @@ extends AbstractSupportCountFunction<I> {
          * 
          * @param item the item for this node.
          */
-        FPTreeNode(I item, FPTreeNode<I> parent) {
+        FPTreeNode(I item) {
             this.item = item;
             this.count = 1;
             this.childMap = new HashMap<>();
@@ -113,7 +112,7 @@ extends AbstractSupportCountFunction<I> {
     public FPTree(int transactionAmount, int minimumSupportCount) {
         super(transactionAmount);
         this.map = new HashMap<>();
-        this.root = new FPTreeNode(null, null);
+        this.root = new FPTreeNode(null);
         this.minimumSupportCount = minimumSupportCount;
     }
     
@@ -177,6 +176,7 @@ extends AbstractSupportCountFunction<I> {
      * @return an array.
      */
     public Object[] getHeaderItems() {
+        System.out.println("Circular: " + this.mapIsCircular());
         final Object[] itemArray = map.keySet().toArray();
         final Map<Object, Integer> countMap = new HashMap<>();
         
@@ -274,7 +274,7 @@ extends AbstractSupportCountFunction<I> {
         
         while (itemIndex < itemlist.size()) {
             final I item = itemlist.get(itemIndex++);
-            final FPTreeNode<I> node = new FPTreeNode<>(item, current);
+            final FPTreeNode<I> node = new FPTreeNode<>(item);
             
             current.childMap.put(item, node);
             current = node;
@@ -301,10 +301,11 @@ extends AbstractSupportCountFunction<I> {
         tree.updateCounts(item);
         
         // Remove the chain for 'item'.
-        removeChain(tree.root, item);
+        removeItemChain(item);
         
         // Remove infrequent items.
         tree.removeInfrequentItemChains();
+        System.out.println("Circular: " + tree.mapIsCircular());
         return tree;
     }
     
@@ -422,12 +423,46 @@ extends AbstractSupportCountFunction<I> {
         }
     }
     
-    private void removeChain(FPTreeNode<I> node, I item) {
-        if (node.childMap.containsKey(item)) {
-            node.childMap.remove(item);
-        } else {
+    /**
+     * Remove all nodes containing <code>item</code> from this FP-tree.
+     * 
+     * @param item the target item.
+     */
+    private void removeItemChain(I item) {
+        final Object[] headerItems = getHeaderItems();
+        final Set<I> set = new HashSet<>(headerItems.length);
+        
+        int index = 0;
+        
+        for (; headerItems[index] != item; ++index) {}
+        
+        for (int i = 0; i <= index; ++i) {
+            set.add((I) headerItems[index]);
+        }
+        
+        removeItemChain(set, root);
+        
+        for (final I i : set) {
+            map.remove(i);
+        }
+    }
+    
+    /**
+     * Implements item chain removal.
+     * 
+     * @param item the target item.
+     * @param node the target node.
+     */
+    private void removeItemChain(Set<I> items, FPTreeNode<I> node) {
+        if (!items.contains(node.item)) {
+            // The target nodes not yet reached. Recur.
             for (final FPTreeNode<I> child : node.childMap.values()) {
-                removeChain(child, item);
+                removeItemChain(items, child);
+            }
+        } else {
+            // Remove all the mappings with keys in 'items'.
+            for (final I item : items) {
+                node.childMap.remove(item);
             }
         }
     }
@@ -528,8 +563,7 @@ extends AbstractSupportCountFunction<I> {
     private void copyFPTreeNode(FPTreeNode<I> thisTreeNode,
                                 FPTreeNode<I> otherTreeNode) {
         for (final FPTreeNode<I> n : otherTreeNode.childMap.values()) {
-            final FPTreeNode<I> newnode = new FPTreeNode<>(n.item, 
-                                                           thisTreeNode);
+            final FPTreeNode<I> newnode = new FPTreeNode<>(n.item);
             newnode.count = n.count;
             
             if (map.containsKey(newnode.item)) {
@@ -540,6 +574,31 @@ extends AbstractSupportCountFunction<I> {
             thisTreeNode.childMap.put(newnode.item, newnode);
             copyFPTreeNode(newnode, n);
         }
+    }
+    
+    public boolean mapIsCircular() {
+        for (final FPTreeNode<I> node : map.values()) {
+            if (isCircular(node)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    private boolean isCircular(FPTreeNode<I> node) {
+        final Set<FPTreeNode<I>> set = new HashSet<>();
+        
+        while (node != null) {
+            if (set.contains(node)) {
+                return true;
+            }
+            
+            set.add(node);
+            node = node.next;
+        }
+        
+        return false;
     }
     
     private void toItemList(FPTreeNode<I> node, Set<I> set) {
