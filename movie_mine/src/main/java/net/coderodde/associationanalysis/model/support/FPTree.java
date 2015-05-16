@@ -289,9 +289,63 @@ extends AbstractSupportCountFunction<I> {
         tree.pruneLists();
                 
         // Remove all nodes with zero count.
-        
+        tree.pruneZeroCountNodes();
         System.out.println("Yebaa!");
         return tree;
+    }
+    
+    private void pruneZeroCountNodes() {
+        final Map<FPTreeNode<I>, FPTreeNode<I>> parentMap = getParentMap();
+        
+        for (final FPTreeNode<I> start : map.values()) {
+            final Map<FPTreeNode<I>, FPTreeNode<I>> precedenceMap =
+                    getPrecedenceMap(start.item);
+            
+            final List<FPTreeNode<I>> list = new ArrayList<>();
+            
+            for (FPTreeNode<I> node = start; node != null; node = node.next) {
+                if (node.count == 0) {
+                    list.add(node);
+                }
+            }
+            
+            for (final FPTreeNode<I> node : list) {
+                omit(node, parentMap.get(node));
+                
+                final FPTreeNode<I> predecessor = precedenceMap.get(node);
+                
+                if (predecessor == null) {
+                    map.put(start.item, node.next);
+                    precedenceMap.put(node.next, null);
+                } else {
+                    predecessor.next = node.next;
+                    precedenceMap.put(node.next, predecessor);
+                }
+            }
+        }
+    }
+    
+    /**
+     * Creates the precedence map for a particular linked list of 
+     * <code>item</code>. The result map maps each FP-tree node to its 
+     * predecessor FP-tree node.
+     * 
+     * @param  item the linked list selector.
+     * @return precedence map.
+     */
+    private Map<FPTreeNode<I>, FPTreeNode<I>> getPrecedenceMap(I item) {
+        final Map<FPTreeNode<I>, FPTreeNode<I>> ret = new HashMap<>();
+        
+        FPTreeNode<I> prev = null;
+        FPTreeNode<I> current = map.get(item);
+        
+        while (current != null) {
+            ret.put(current, prev);
+            prev = current;
+            current = current.next;
+        }
+        
+        return ret;
     }
     
     private void pruneLists() {
