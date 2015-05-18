@@ -240,21 +240,43 @@ extends AbstractSupportCountFunction<I> {
     @Override
     public int getSupportCount(Set<I> itemset) {
         final List<I> itemlist = new ArrayList<>(itemset);
+        final Set<I> workSet = new HashSet<>(itemset);
+        
         Collections.sort(itemlist, supportCountComparator);
         
-        int supportCount = 0;
-        FPTreeNode<I> start = map.get(itemlist.get(0));
+        FPTreeNode<I> node = map.get(itemlist.get(0));
+        int count = 0;
         
-        outer:
-        for (; start != null; start = start.next) {
-            supportCount += countFrom(start, itemset);
+        for (; node != null; node = node.next) {
+            count += countFrom(node, workSet);
         }
         
-        return supportCount;
+        return count;
     }
     
-    private int countFrom(FPTreeNode<I> start, Set<I> itemset) {
+    private int countFrom(FPTreeNode<I> node, Set<I> workSet) {
+        boolean nodeInWorkSet = false;
         
+        if (workSet.contains(node.item)) {
+            nodeInWorkSet = true;
+            workSet.remove(node.item);
+        }
+        
+        if (workSet.isEmpty()) {
+            return node.count;
+        }
+        
+        int count = 0;
+        
+        for (final FPTreeNode<I> child : node.childMap.values()) {
+            count += countFrom(child, workSet);
+        }
+        
+        if (nodeInWorkSet) {
+            workSet.add(node.item);
+        }
+            
+        return count;
     }
 
     /**

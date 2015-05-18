@@ -337,7 +337,7 @@ public class FPGrowthFrequentItemsetGeneratorTest {
         work.add(map.get("Diapers"));
         
         assertTrue(frequentItemsetList.contains(work));
-        assertEquals(3, sf.getSupportCount(work));
+        assertEquals(2, sf.getSupportCount(work));
         
         work.clear();
         work.add(map.get("Milk"));
@@ -350,12 +350,13 @@ public class FPGrowthFrequentItemsetGeneratorTest {
         work.add(map.get("Eggs"));
         
         assertFalse(frequentItemsetList.contains(work));
-        assertEquals(1, sf.getSupportCount(work));
+        assertEquals(0, sf.getSupportCount(work));
         
+        work.clear();
         work.add(map.get("Cola"));
         
-        assertFalse(frequentItemsetList.contains(work));
-        assertEquals(0, sf.getSupportCount(work));
+        assertTrue(frequentItemsetList.contains(work));
+        assertEquals(2, sf.getSupportCount(work));
     }
     
     @Test
