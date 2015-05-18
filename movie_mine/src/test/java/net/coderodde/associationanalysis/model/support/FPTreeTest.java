@@ -2,8 +2,10 @@ package net.coderodde.associationanalysis.model.support;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -36,6 +38,14 @@ public class FPTreeTest {
         final String d = "d";
         final String e = "e";
         
+        final Map<String, Integer> map = new HashMap<>();
+        
+        map.put("a", 8);
+        map.put("b", 4);
+        map.put("c", 6);
+        map.put("d", 5);
+        map.put("e", 3);
+        
         final FPTree<String> tree = new FPTree<>(10, 2, null);
         
         tree.putSupportCount(asSet(a, b), 0);
@@ -50,8 +60,6 @@ public class FPTreeTest {
         tree.putSupportCount(asSet(b, c, e), 0);
         
         final FPTree<String> other = tree.getConditionalFPTree(e);
-        
-        System.out.println("Yeah!!");
     }
     
     public static <I> Set asSet(I... items) {

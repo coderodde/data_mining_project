@@ -190,7 +190,6 @@ extends AbstractSupportCountFunction<I> {
             
             for (node = map.get(item); node != null; node = node.next) {
                 count += node.count;
-                System.out.println(count);
                 
                 if (count >= 2000) {
                     System.exit(-1);
@@ -240,7 +239,17 @@ extends AbstractSupportCountFunction<I> {
      */
     @Override
     public int getSupportCount(Set<I> itemset) {
-        return Integer.MIN_VALUE;
+        final List<I> itemlist = new ArrayList<>(itemset);
+        Collections.sort(itemlist, supportCountComparator);
+        
+        FPTreeNode<I> node = root;
+        int index = 0;
+        
+        while (index < itemlist.size()) {
+            node = node.childMap.get(itemlist.get(index++));
+        }
+        
+        return node.count;
     }
 
     /**
@@ -260,6 +269,7 @@ extends AbstractSupportCountFunction<I> {
         int itemIndex = 0;
         final int itemAmount = itemlist.size();
         
+        outer:
         while (itemIndex < itemAmount 
                 && (child = current.getChildNode(itemlist.get(itemIndex))) 
                 != null) {
@@ -270,10 +280,18 @@ extends AbstractSupportCountFunction<I> {
             if (!map.containsKey(current.item)) {
                 map.put(current.item, current);
             } else {
+                FPTreeNode<I> tmp = map.get(current.item);
+                
+                for (; tmp != null; tmp = tmp.next) {
+                    if (tmp == current) {
+                        // 'current' is already linked to a chain.
+                        continue outer;
+                    }
+                }
+                
+                // 'current' is not present in a chain.
                 current.next = map.get(current.item);
                 map.put(current.item, current);
-                
-                System.out.println(hasCycle());
             }
         } 
         
@@ -331,7 +349,6 @@ extends AbstractSupportCountFunction<I> {
                 
         // Remove all nodes with zero count.
         tree.pruneZeroCountNodes();
-        System.out.println("Yebaa!");
         return tree;
     }
     

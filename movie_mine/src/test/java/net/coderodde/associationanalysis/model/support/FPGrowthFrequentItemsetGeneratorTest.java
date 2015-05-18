@@ -357,7 +357,7 @@ public class FPGrowthFrequentItemsetGeneratorTest {
         assertEquals(0, sf.getSupportCount(work));
     }
     
-//    @Test
+    @Test
     public void testFindFrequentItemsets2() {
         final List<Set<String>> transactionList = new ArrayList<>();
         transactionList.add(asSet("a", "b"));
@@ -382,7 +382,7 @@ public class FPGrowthFrequentItemsetGeneratorTest {
         };
         
         final FrequentItemsetData<String> data = 
-                new AprioriFrequentItemsetGenerator<>(cmp)
+                new FPGrowthFrequentItemsetGenerator<String>()
                 .findFrequentItemsets(db.select(), minimumSupport);
         
         assertEquals(19, data.getFrequentItemsets().size());
@@ -416,7 +416,7 @@ public class FPGrowthFrequentItemsetGeneratorTest {
         assertTrue(data.getFrequentItemsets().contains(asSet(a, b)));
         assertTrue(data.getFrequentItemsets().contains(asSet(a)));
         
-        assertFalse(data.getFrequentItemsets().contains(asSet(a, b, c, d,e )));
+        assertFalse(data.getFrequentItemsets().contains(asSet(a, b, c, d, e)));
     }
     
     static class StringDatabase extends AbstractDatabase<Object, String> {

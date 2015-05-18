@@ -148,8 +148,12 @@ extends AbstractFrequentItemsetGenerator<I> {
             final I item = (I) itemObject;
             final Set<I> beta = new HashSet<>(alpha.size() + 1);
             
+            // Construct the next itemset.
             beta.addAll(alpha);
             beta.add(item);
+            
+            // Add the pattern to the output list.
+            list.add(beta);
             
             final FPTree<I> nextTree = tree.getConditionalFPTree(item);
             
