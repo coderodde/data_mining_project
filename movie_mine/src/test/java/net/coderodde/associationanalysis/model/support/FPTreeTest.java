@@ -12,7 +12,7 @@ public class FPTreeTest {
 
     @Test
     public void testPutSupportCount() {
-        final FPTree<String> tree = new FPTree<>(3, 3);
+        final FPTree<String> tree = new FPTree<>(3, 3, null);
         final List<Set<String>> transactions = new ArrayList<>();
         
         transactions.add(new HashSet<>(Arrays.asList("A", "B")));
@@ -36,7 +36,7 @@ public class FPTreeTest {
         final String d = "d";
         final String e = "e";
         
-        final FPTree<String> tree = new FPTree<>(10, 2);
+        final FPTree<String> tree = new FPTree<>(10, 2, null);
         
         tree.putSupportCount(asSet(a, b), 0);
         tree.putSupportCount(asSet(b, c, d), 0);

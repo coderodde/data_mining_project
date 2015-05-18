@@ -33,14 +33,16 @@ extends AbstractFrequentItemsetGenerator<I> {
         final int minimumSupportCount = 
                 (int) Math.ceil(transactionList.size() * minimumSupport);
         
-        // The initial FP-tree.
-        final FPTree<I> tree = new FPTree<>(transactionList.size(), 
-                                            minimumSupportCount);
-        
         // Find infrequent items (not itemsets!).
         final ItemCategories<I> categories = 
                 splitItems(transactionList,
                                     minimumSupport);
+        
+        // The initial FP-tree.
+        final FPTree<I> tree = new FPTree<>(transactionList.size(), 
+                                            minimumSupportCount,
+                                            categories.map);
+        
         final Set<I> infrequentSet = categories.infrequentItems;
         
         // Build the FP-tree.
@@ -56,7 +58,8 @@ extends AbstractFrequentItemsetGenerator<I> {
         
         // A collection of frequent patterns beint populated.
         final List<Set<I>> frequentItemsetList = new ArrayList<>();
-        
+        // Maps each item to its priority. The less the value, the higher the
+        // priority.
         // The actual computation begins here.
         fpGrowth(tree, new HashSet<I>(), frequentItemsetList);
         
@@ -74,13 +77,17 @@ extends AbstractFrequentItemsetGenerator<I> {
     private static class ItemCategories<T> {
         final Set<T> frequentItems;
         final Set<T> infrequentItems;
+        final Map<T, Integer> map;
         
-        ItemCategories(Set<T> frequentItems, Set<T> infrequentItems) {
+        ItemCategories(Set<T> frequentItems, 
+                       Set<T> infrequentItems,
+                       Map<T, Integer> map) {
             this.frequentItems = frequentItems;
             this.infrequentItems = infrequentItems;
+            this.map = map;
         }
     }
-        
+    
     /**
      * Splits the items contained in <code>transactionList</code> into two sets:
      * one for frequent items and another for infrequent items.
@@ -113,7 +120,7 @@ extends AbstractFrequentItemsetGenerator<I> {
             (support < minimumSupport ? infrequentSet : frequentSet).add(item);
         }
         
-        return new ItemCategories<>(frequentSet, infrequentSet);
+        return new ItemCategories<>(frequentSet, infrequentSet, map);
     }
         
     /**

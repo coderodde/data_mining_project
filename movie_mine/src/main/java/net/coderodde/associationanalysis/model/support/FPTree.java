@@ -72,6 +72,12 @@ extends AbstractSupportCountFunction<I> {
     }
     
     /**
+     * The comparator comparing items by their support counts. The element with
+     * higher support count will occupy a smaller index within array or list.
+     */
+    private Comparator<I> supportCountComparator;
+    
+    /**
      * The root node of this tree. Does not store items.
      */
     private final FPTreeNode<I> root;
@@ -80,6 +86,11 @@ extends AbstractSupportCountFunction<I> {
      * Maps each item to the first FP-tree node in this tree.
      */
     private final Map<I, FPTreeNode<I>> map;
+    
+    /**
+     * Maps each item to its support count.
+     */
+    private final Map<I, Integer> countMap;
     
     /**
      * The minimum support count for guaranteeing frequentness.
@@ -91,12 +102,19 @@ extends AbstractSupportCountFunction<I> {
      * 
      * @param transactionAmount   the amount of transactions this tree covers.
      * @param minimumSupportCount the minimum support count.
+     * @param countMap            the map mapping each item to its support 
+     *                            count.
      */
-    public FPTree(int transactionAmount, int minimumSupportCount) {
+    public FPTree(int transactionAmount, 
+                  int minimumSupportCount,
+                  Map<I, Integer> countMap) {
         super(transactionAmount);
         this.map = new HashMap<>();
         this.root = new FPTreeNode(null);
+        this.countMap = countMap;
         this.minimumSupportCount = minimumSupportCount;
+        this.supportCountComparator = 
+                new ItemComparatorBySupportCount<>(countMap);
     }
     
     /**
@@ -105,7 +123,9 @@ extends AbstractSupportCountFunction<I> {
      * @param other the FP-tree to copy.
      */
     public FPTree(FPTree<I> other) {
-        this(other.transactionAmount, other.minimumSupportCount);
+        this(other.transactionAmount, 
+             other.minimumSupportCount, 
+             other.countMap);
         copyFPTreeNode(root, other.root);
     }
     
@@ -232,14 +252,15 @@ extends AbstractSupportCountFunction<I> {
     @Override
     public void putSupportCount(Set<I> itemset, int supportCount) {
         final List<I> itemlist = new ArrayList<>(itemset);
-        Collections.sort(itemlist);
+        Collections.sort(itemlist, supportCountComparator);
         
         FPTreeNode<I> current = root;
         FPTreeNode<I> child;
         
         int itemIndex = 0;
+        final int itemAmount = itemlist.size();
         
-        while (itemIndex < itemlist.size() 
+        while (itemIndex < itemAmount 
                 && (child = current.getChildNode(itemlist.get(itemIndex))) 
                 != null) {
             current = child;
@@ -248,13 +269,15 @@ extends AbstractSupportCountFunction<I> {
             
             if (!map.containsKey(current.item)) {
                 map.put(current.item, current);
-            } else if (map.get(current.item) != current) {
+            } else {
                 current.next = map.get(current.item);
                 map.put(current.item, current);
+                
+                System.out.println(hasCycle());
             }
         } 
         
-        while (itemIndex < itemlist.size()) {
+        while (itemIndex < itemAmount) {
             final I item = itemlist.get(itemIndex++);
             final FPTreeNode<I> node = new FPTreeNode<>(item);
             
@@ -268,6 +291,24 @@ extends AbstractSupportCountFunction<I> {
                 map.put(item, node);
             }
         }
+    }
+    
+    private boolean hasCycle() {
+        for (final FPTreeNode<I> node : map.values()) {
+            FPTreeNode<I> tmp = node;
+            
+            Set<FPTreeNode<I>> set = new HashSet<>();
+            
+            while (tmp != null) {
+                if (set.contains(tmp)) {
+                    return true;
+                }
+                
+                set.add(tmp);
+            }
+        }
+        
+        return false;
     }
     
     /**
@@ -590,6 +631,21 @@ extends AbstractSupportCountFunction<I> {
         
         for (FPTreeNode<I> childNode : node.childMap.values()) {
             toItemList(childNode, set);
+        }
+    }
+    
+    private static class ItemComparatorBySupportCount<I> 
+    implements Comparator<I> {
+
+        private final Map<I, Integer> supportCountMap;
+        
+        ItemComparatorBySupportCount(Map<I, Integer> supportCountMap) {
+            this.supportCountMap = supportCountMap;
+        }
+        @Override
+        public int compare(I o1, I o2) {
+            return Integer.compare(supportCountMap.get(o2), 
+                                   supportCountMap.get(o1));
         }
     }
 }
