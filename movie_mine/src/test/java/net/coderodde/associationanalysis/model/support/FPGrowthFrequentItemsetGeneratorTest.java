@@ -311,6 +311,7 @@ public class FPGrowthFrequentItemsetGeneratorTest {
         
         System.out.println(db);
         
+        
         final AbstractFrequentItemsetGenerator<Movie> generator =
                 new FPGrowthFrequentItemsetGenerator<>();
         
@@ -384,6 +385,12 @@ public class FPGrowthFrequentItemsetGeneratorTest {
         final FrequentItemsetData<String> data = 
                 new FPGrowthFrequentItemsetGenerator<String>()
                 .findFrequentItemsets(db.select(), minimumSupport);
+        
+        System.out.println("Itemsets:");
+        
+        for (final Set<String> itemset : data.getFrequentItemsets()) {
+            System.out.println(itemset);
+        }
         
         assertEquals(19, data.getFrequentItemsets().size());
         

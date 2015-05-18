@@ -56,16 +56,19 @@ extends AbstractFrequentItemsetGenerator<I> {
             tree.putSupportCount(itemset, Integer.MIN_VALUE);
         }
         
+        // Copy the tree since it will be modified.
+        final FPTree<I> supportCountFunction = tree.clone();
+        
         // A collection of frequent patterns beint populated.
         final List<Set<I>> frequentItemsetList = new ArrayList<>();
         // Maps each item to its priority. The less the value, the higher the
         // priority.
         // The actual computation begins here.
-        fpGrowth(tree, new HashSet<I>(), frequentItemsetList);
+        fpGrowth(tree.clone(), new HashSet<I>(), frequentItemsetList);
         
         // Return the results of the computation.
         return new FrequentItemsetData<>(frequentItemsetList, 
-                                         tree, 
+                                         supportCountFunction, 
                                          transactionList.size());
     }
     
@@ -181,7 +184,6 @@ extends AbstractFrequentItemsetGenerator<I> {
         final List<Set<I>> ret = new ArrayList<>();
         // Don't do empty combination. So -1.
         final long combinationAmount = pow2(list.size()) - 1L;
-        
         for (long l = 0; l < combinationAmount; ++l) {
             bitsetIncrement(bs);
             final Set<I> combination = extractCombination(list, bs);

@@ -242,14 +242,26 @@ extends AbstractSupportCountFunction<I> {
         final List<I> itemlist = new ArrayList<>(itemset);
         Collections.sort(itemlist, supportCountComparator);
         
-        FPTreeNode<I> node = root;
-        int index = 0;
+        int supportCount = 0;
+        FPTreeNode<I> start = map.get(itemlist.get(0));
         
-        while (index < itemlist.size()) {
-            node = node.childMap.get(itemlist.get(index++));
+        outer:
+        for (; start != null; start = start.next) {
+            FPTreeNode<I> node = start;
+            
+            for (int i = 1; i < itemlist.size(); ++i) {
+                final I item = itemlist.get(i);
+                node = node.childMap.get(item);
+                
+                if (node == null) {
+                    continue outer;
+                }
+            }
+            
+            supportCount += node.count;
         }
         
-        return node.count;
+        return supportCount;
     }
 
     /**
@@ -651,7 +663,8 @@ extends AbstractSupportCountFunction<I> {
         }
     }
     
-    private static class ItemComparatorBySupportCount<I> 
+    private static class
+            ItemComparatorBySupportCount<I extends Comparable<? super I>> 
     implements Comparator<I> {
 
         private final Map<I, Integer> supportCountMap;
@@ -659,10 +672,17 @@ extends AbstractSupportCountFunction<I> {
         ItemComparatorBySupportCount(Map<I, Integer> supportCountMap) {
             this.supportCountMap = supportCountMap;
         }
+        
         @Override
         public int compare(I o1, I o2) {
-            return Integer.compare(supportCountMap.get(o2), 
-                                   supportCountMap.get(o1));
+            final int cmp = Integer.compare(supportCountMap.get(o2),
+                                            supportCountMap.get(o1));
+            if (cmp != 0) {
+                return cmp;
+            }
+            
+            // Same support count, sort by item names.
+            return o1.compareTo(o2);
         }
     }
 }

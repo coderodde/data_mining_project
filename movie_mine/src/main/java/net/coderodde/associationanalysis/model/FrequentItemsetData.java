@@ -42,7 +42,7 @@ public class FrequentItemsetData<I> {
         this.frequentItemsets = frequentItemsets;
         this.supportCountFunction = supportCountFunction;
         this.transactionAmount = transactionAmount;
-        Collections.sort(frequentItemsets,
+        Collections.sort(this.frequentItemsets,
                          new Utilities.ItemsetComparatorBySupport
                          (supportCountFunction));
     }

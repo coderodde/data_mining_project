@@ -14,7 +14,15 @@ public class FPTreeTest {
 
     @Test
     public void testPutSupportCount() {
-        final FPTree<String> tree = new FPTree<>(3, 3, null);
+        final Map<String, Integer> countMap = new HashMap<>();
+        
+        countMap.put("A", 2);
+        countMap.put("B", 2);
+        countMap.put("C", 2);
+        countMap.put("D", 2);
+        countMap.put("E", 1);
+        
+        final FPTree<String> tree = new FPTree<>(3, 3, countMap);
         final List<Set<String>> transactions = new ArrayList<>();
         
         transactions.add(new HashSet<>(Arrays.asList("A", "B")));
@@ -38,15 +46,15 @@ public class FPTreeTest {
         final String d = "d";
         final String e = "e";
         
-        final Map<String, Integer> map = new HashMap<>();
+        final Map<String, Integer> countMap = new HashMap<>();
         
-        map.put("a", 8);
-        map.put("b", 4);
-        map.put("c", 6);
-        map.put("d", 5);
-        map.put("e", 3);
+        countMap.put("a", 8);
+        countMap.put("b", 4);
+        countMap.put("c", 6);
+        countMap.put("d", 5);
+        countMap.put("e", 3);
         
-        final FPTree<String> tree = new FPTree<>(10, 2, null);
+        final FPTree<String> tree = new FPTree<>(10, 2, countMap);
         
         tree.putSupportCount(asSet(a, b), 0);
         tree.putSupportCount(asSet(b, c, d), 0);
@@ -59,7 +67,7 @@ public class FPTreeTest {
         tree.putSupportCount(asSet(a, b, d), 0);
         tree.putSupportCount(asSet(b, c, e), 0);
         
-        final FPTree<String> other = tree.getConditionalFPTree(e);
+        final FPTree<String> other = tree.getConditionalFPTree(c);
     }
     
     public static <I> Set asSet(I... items) {
