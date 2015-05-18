@@ -247,21 +247,14 @@ extends AbstractSupportCountFunction<I> {
         
         outer:
         for (; start != null; start = start.next) {
-            FPTreeNode<I> node = start;
-            
-            for (int i = 1; i < itemlist.size(); ++i) {
-                final I item = itemlist.get(i);
-                node = node.childMap.get(item);
-                
-                if (node == null) {
-                    continue outer;
-                }
-            }
-            
-            supportCount += node.count;
+            supportCount += countFrom(start, itemset);
         }
         
         return supportCount;
+    }
+    
+    private int countFrom(FPTreeNode<I> start, Set<I> itemset) {
+        
     }
 
     /**
